@@ -4,24 +4,36 @@ use indicatif::ProgressBar;
 use std::{fs::File, process::exit};
 
 mod vec3;
-use vec3::*;
+use vec3::{Color, Vec3};
 mod ray;
 use ray::Ray;
+
+fn hit_sphere(center: Vec3, radius: f64, ray: Ray) -> bool {
+    let oc = ray.origin - center;
+    let a = Vec3::dot(ray.direction, ray.direction);
+    let b = 2.0 * Vec3::dot(oc, ray.direction);
+    let c = Vec3::dot(oc, oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant >= 0.0
+}
 
 // 接受一个光线做为参数 然后计算这条光线所产生的颜色
 fn ray_color(ray: Ray) -> Color {
     // 单位方向向量
     let unit_dir = Vec3::unit_vector(ray.direction);
 
-    // 在本示例中 光线颜色取决于单位方向向量 y 坐标值
-    // 单位向量 -> -1 <= y <= 1  let t = 0.5 + y
+    // 在本示例中 与球体相交的光线将会着色为红色 (1.0, 0.0, 0.0)
+    if hit_sphere(Vec3::new(0.0, 0.0, -1.0), 0.5, ray) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
+    // 不相交 -> let t = 0.5 + y
     // 然后对 t 在 [0,1] 之间进行线性插值 结果映射至白色 (1.0, 1.0, 1.0) 到蓝色 (0.5, 0.7, 1.0)
     let t = 0.5 + unit_dir.y * 0.5;
     (1.0 - t) * Color::one() + t * Color::new(0.5, 0.7, 1.0)
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image2.jpg");
+    let path = std::path::Path::new("output/book1/image3.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
