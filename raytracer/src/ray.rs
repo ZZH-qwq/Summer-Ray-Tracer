@@ -10,4 +10,9 @@ impl Ray {
     pub fn new(origin: Vec3, direction: Vec3) -> Self {
         Self { origin, direction }
     }
+
+    // at() 能够求出光路上的某一点
+    pub fn at(&self, t: f64) -> Vec3 {
+        self.origin + self.direction * t
+    }
 }
