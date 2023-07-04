@@ -64,8 +64,9 @@ fn main() {
                 lower_left_corner + horizontal * u + vertical * v - origin,
             );
 
-            let color = ray_color(ray) * 255.999;
-            *pixel = image::Rgb([color.x as u8, color.y as u8, color.z as u8]);
+            let color = ray_color(ray);
+            let rgb = color.to_u8();
+            *pixel = image::Rgb([rgb.0, rgb.1, rgb.2]);
         }
         progress.inc(1);
     }

@@ -39,15 +39,15 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
-    fn to_u64(&self) -> (u64, u64, u64) {
-        let x = (self.x * 255.999) as u64;
-        let y = (self.y * 255.999) as u64;
-        let z = (self.z * 255.999) as u64;
+    pub fn to_u8(self) -> (u8, u8, u8) {
+        let x = (self.x * 255.999) as u8;
+        let y = (self.y * 255.999) as u8;
+        let z = (self.z * 255.999) as u8;
         (x, y, z)
     }
 
     pub fn get_color_string(&self) -> String {
-        let xyz = self.to_u64();
+        let xyz = self.to_u8();
         format!("{} {} {}\n", xyz.0, xyz.1, xyz.2)
     }
 
