@@ -12,6 +12,7 @@ pub struct HitRecord<'a> {
     pub normal: Vec3,
     pub material: &'a dyn Material,
     pub t: f64,
+    pub front_face: bool,
 }
 
 impl<'a> HitRecord<'a> {
@@ -22,18 +23,20 @@ impl<'a> HitRecord<'a> {
         material: &'a dyn Material,
         ray: Ray,
     ) -> Self {
-        let normal = if Vec3::dot(ray.direction, outward_normal) > 0.0 {
-            // ray is inside the sphere
-            -outward_normal
-        } else {
+        let front_face = Vec3::dot(ray.direction, outward_normal) < 0.0;
+        let normal = if front_face {
             // ray is outside the sphere
             outward_normal
+        } else {
+            // ray is inside the sphere
+            -outward_normal
         };
         Self {
             point,
             normal,
             material,
             t,
+            front_face,
         }
     }
 }

@@ -106,6 +106,12 @@ impl Vec3 {
     pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
         v - n * 2.0 * Vec3::dot(v, n)
     }
+
+    pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
+        let cos_theta = Vec3::dot(-uv, n).min(1.0);
+        let r_out_prep = etai_over_etat * (uv + n * cos_theta);
+        r_out_prep - (1.0 - r_out_prep.length_squared()).abs().sqrt() * n
+    }
 }
 
 impl Neg for Vec3 {
