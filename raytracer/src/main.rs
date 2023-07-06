@@ -47,7 +47,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book1/image11.jpg");
+    let path = std::path::Path::new("output/book1/image12.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -63,8 +63,8 @@ fn main() {
 
     let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
     let material_center = Lambertian::new(Color::new(0.7, 0.3, 0.3));
-    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8));
-    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2));
+    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 1.0);
 
     world.add(Box::new(Sphere::new(
         Vec3::new(0.0, -100.5, -1.0),
