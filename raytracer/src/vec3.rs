@@ -2,6 +2,7 @@
 // 部分代码引用自 https://github.com/moeif/rtiow-rs/
 // 已经理解了代码的具体作用和实现方式 并将会在实际应用中进行修改
 
+use rand::Rng;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Copy, Clone)]
@@ -66,6 +67,21 @@ impl Vec3 {
 
     pub fn unit_vector(v: Self) -> Self {
         v / v.length()
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        let mut rng = rand::thread_rng();
+        let mut v: Vec3;
+        loop {
+            v = Vec3::new(
+                rng.gen_range(-1.0..1.0),
+                rng.gen_range(-1.0..1.0),
+                rng.gen_range(-1.0..1.0),
+            );
+            if v.length_squared() < 1.0 {
+                return v;
+            }
+        }
     }
 }
 

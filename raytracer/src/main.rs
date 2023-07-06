@@ -17,10 +17,20 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Vec3};
 
 // 接受一个光线做为参数 然后计算这条光线所产生的颜色
-fn ray_color(ray: Ray, world: &dyn Hittable) -> Color {
-    // 使用了新编写的 Hittable 以及 Sphere 类
+fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
+    // 加入了漫反射材质
+    // 限制递归层数
+    if depth <= 0 {
+        return Vec3::zero();
+    }
+    // 通过递归调用 ray_color 实现多次反射
     if let Some(hit_record) = world.hit(ray, 0.0, f64::INFINITY) {
-        return (hit_record.normal + Vec3::one()) * 0.5;
+        let target = hit_record.point + hit_record.normal + Vec3::random_in_unit_sphere();
+        return ray_color(
+            Ray::new(hit_record.point, target - hit_record.point),
+            world,
+            depth - 1,
+        ) * 0.5;
     }
     // 不相交 则根据 y 值线性插值映射至白色 (1.0, 1.0, 1.0) 到蓝色 (0.5, 0.7, 1.0)
     let t = 0.5 + Vec3::unit_vector(ray.direction).y * 0.5;
@@ -33,9 +43,10 @@ fn main() {
     let width = 400;
     let height = (width as f64 / aspect_ratio) as u32;
     let samples_per_pixel = 100;
+    let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book1/image6.jpg");
+    let path = std::path::Path::new("output/book1/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -67,7 +78,7 @@ fn main() {
 
                 // 生成光线
                 let ray = cam.get_ray(u, v);
-                pixel_color += ray_color(ray, &world);
+                pixel_color += ray_color(ray, &world, max_depth);
             }
             let rgb = (pixel_color / samples_per_pixel as f64).to_u8();
             *pixel = image::Rgb([rgb.0, rgb.1, rgb.2]);
