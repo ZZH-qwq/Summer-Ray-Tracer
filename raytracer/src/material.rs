@@ -83,14 +83,23 @@ impl Material for Dielectric {
         } else {
             self.ir
         };
-        let refracted = Vec3::refract(
-            Vec3::unit_vector(ray.direction),
-            hit_record.normal,
-            refraction_ratio,
-        );
-        Some((
-            Color::new(1.0, 1.0, 1.0),
-            Ray::new(hit_record.point, refracted),
-        ))
+        let unit_direction = Vec3::unit_vector(ray.direction);
+        let cos_theta = Vec3::dot(-unit_direction, hit_record.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta).sqrt();
+        if refraction_ratio * sin_theta > 1.0 {
+            // 全反射
+            let reflected = Vec3::reflect(unit_direction, hit_record.normal);
+            Some((
+                Color::new(1.0, 1.0, 1.0),
+                Ray::new(hit_record.point, reflected),
+            ))
+        } else {
+            // 折射
+            let refracted = Vec3::refract(unit_direction, hit_record.normal, refraction_ratio);
+            Some((
+                Color::new(1.0, 1.0, 1.0),
+                Ray::new(hit_record.point, refracted),
+            ))
+        }
     }
 }
