@@ -24,7 +24,7 @@ fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
         return Vec3::zero();
     }
     // 通过递归调用 ray_color 实现多次反射
-    if let Some(hit_record) = world.hit(ray, 0.0, f64::INFINITY) {
+    if let Some(hit_record) = world.hit(ray, 0.001, f64::INFINITY) {
         let target = hit_record.point + hit_record.normal + Vec3::random_in_unit_sphere();
         return ray_color(
             Ray::new(hit_record.point, target - hit_record.point),
