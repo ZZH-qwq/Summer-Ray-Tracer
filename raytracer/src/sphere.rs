@@ -1,21 +1,27 @@
 // 球体类
 
 use crate::hittable::*;
+use crate::material::Material;
 use crate::vec3::Vec3;
 
 #[derive(Debug, Copy, Clone)]
-pub struct Sphere {
+pub struct Sphere<M: Material> {
     pub center: Vec3,
     pub radius: f64,
+    pub material: M,
 }
 
-impl Sphere {
-    pub fn new(center: Vec3, radius: f64) -> Self {
-        Self { center, radius }
+impl<M: Material> Sphere<M> {
+    pub fn new(center: Vec3, radius: f64, material: M) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
-impl Hittable for Sphere {
+impl<M: Material> Hittable for Sphere<M> {
     fn hit(&self, ray: crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = ray.origin - self.center;
         let a = Vec3::dot(ray.direction, ray.direction);
@@ -43,6 +49,7 @@ impl Hittable for Sphere {
                     p,
                     root,
                     (p - self.center) / self.radius,
+                    &self.material,
                     ray,
                 ))
             }
@@ -53,6 +60,7 @@ impl Hittable for Sphere {
                 p,
                 root,
                 (p - self.center) / self.radius,
+                &self.material,
                 ray,
             ))
         }

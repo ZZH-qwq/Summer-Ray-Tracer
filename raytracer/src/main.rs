@@ -1,6 +1,7 @@
 mod camera;
 mod hittable;
 mod hittable_list;
+mod material;
 mod ray;
 mod sphere;
 mod vec3;
@@ -10,6 +11,7 @@ use hittable::*;
 use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use material::*;
 use rand::Rng;
 use ray::Ray;
 use sphere::Sphere;
@@ -23,15 +25,13 @@ fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
     if depth <= 0 {
         return Vec3::zero();
     }
-    // 通过递归调用 ray_color 实现多次反射
+    // 调用不同材质产生不同的反射
     if let Some(hit_record) = world.hit(ray, 0.001, f64::INFINITY) {
-        // 半球形散射
-        let target = hit_record.point + Vec3::random_in_hemisphere(hit_record.normal);
-        return ray_color(
-            Ray::new(hit_record.point, target - hit_record.point),
-            world,
-            depth - 1,
-        ) * 0.5;
+        if let Some((attenuation, scattered)) = hit_record.material.scatter(ray, hit_record) {
+            return ray_color(scattered, world, depth - 1) * attenuation;
+        } else {
+            return Color::zero();
+        }
     }
     // 不相交 则根据 y 值线性插值映射至白色 (1.0, 1.0, 1.0) 到蓝色 (0.5, 0.7, 1.0)
     let t = 0.5 + Vec3::unit_vector(ray.direction).y * 0.5;
@@ -47,7 +47,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book1/image10.jpg");
+    let path = std::path::Path::new("output/book1/image11.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -60,8 +60,32 @@ fn main() {
 
     // 物体
     let mut world = HittableList::new();
-    world.add(Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
+
+    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
+    let material_center = Lambertian::new(Color::new(0.7, 0.3, 0.3));
+    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8));
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2));
+
+    world.add(Box::new(Sphere::new(
+        Vec3::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    )));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(0.0, 0.0, -1.0),
+        0.5,
+        material_center,
+    )));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left,
+    )));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(1.0, 0.0, -1.0),
+        0.5,
+        material_right,
+    )));
 
     // 镜头
     let cam = Camera::new();

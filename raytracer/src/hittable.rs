@@ -2,18 +2,26 @@
 // 具体物体需要实现 Hittable 的 trait
 // 以计算与光线碰撞的具体位置
 
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
-#[derive(Debug, Copy, Clone)]
-pub struct HitRecord {
+#[derive(Copy, Clone)]
+pub struct HitRecord<'a> {
     pub point: Vec3,
     pub normal: Vec3,
+    pub material: &'a dyn Material,
     pub t: f64,
 }
 
-impl HitRecord {
-    pub fn new(point: Vec3, t: f64, outward_normal: Vec3, ray: Ray) -> Self {
+impl<'a> HitRecord<'a> {
+    pub fn new(
+        point: Vec3,
+        t: f64,
+        outward_normal: Vec3,
+        material: &'a dyn Material,
+        ray: Ray,
+    ) -> Self {
         let normal = if Vec3::dot(ray.direction, outward_normal) > 0.0 {
             // ray is inside the sphere
             -outward_normal
@@ -21,7 +29,12 @@ impl HitRecord {
             // ray is outside the sphere
             outward_normal
         };
-        Self { point, normal, t }
+        Self {
+            point,
+            normal,
+            material,
+            t,
+        }
     }
 }
 
