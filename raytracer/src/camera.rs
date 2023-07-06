@@ -1,3 +1,5 @@
+// 相机类
+
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 

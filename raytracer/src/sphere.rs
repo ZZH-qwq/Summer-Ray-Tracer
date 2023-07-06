@@ -1,3 +1,5 @@
+// 球体类
+
 use crate::hittable::*;
 use crate::vec3::Vec3;
 

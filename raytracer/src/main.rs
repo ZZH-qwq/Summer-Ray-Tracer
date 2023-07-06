@@ -1,8 +1,3 @@
-use console::style;
-use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
-use std::{fs::File, process::exit};
-
 mod camera;
 mod hittable;
 mod hittable_list;
@@ -10,11 +5,15 @@ mod ray;
 mod sphere;
 mod vec3;
 use camera::Camera;
+use console::style;
 use hittable::*;
 use hittable_list::HittableList;
+use image::{ImageBuffer, RgbImage};
+use indicatif::ProgressBar;
 use rand::Rng;
 use ray::Ray;
 use sphere::Sphere;
+use std::{fs::File, process::exit};
 use vec3::{Color, Vec3};
 
 // 接受一个光线做为参数 然后计算这条光线所产生的颜色

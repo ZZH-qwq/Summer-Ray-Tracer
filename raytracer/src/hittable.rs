@@ -1,3 +1,7 @@
+// 可交互物体抽象类
+// 具体物体需要实现 Hittable 的 trait
+// 以计算与光线碰撞的具体位置
+
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 

@@ -1,3 +1,5 @@
+// 光线类
+
 use crate::vec3::Vec3;
 
 #[derive(Debug, Copy, Clone)]

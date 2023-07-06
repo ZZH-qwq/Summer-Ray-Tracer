@@ -1,3 +1,6 @@
+// 可交互物体列表
+// 物体需要支持 Hittable 的 trait
+
 use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 

@@ -1,3 +1,4 @@
+// 三维向量类
 // 部分代码引用自 https://github.com/moeif/rtiow-rs/
 // 已经理解了代码的具体作用和实现方式 并将会在实际应用中进行修改
 
@@ -40,9 +41,9 @@ impl Vec3 {
     }
 
     pub fn to_u8(self) -> (u8, u8, u8) {
-        let x = (self.x * 255.999) as u8;
-        let y = (self.y * 255.999) as u8;
-        let z = (self.z * 255.999) as u8;
+        let x = (self.x.clamp(0.0, 0.999) * 256.0) as u8;
+        let y = (self.y.clamp(0.0, 0.999) * 256.0) as u8;
+        let z = (self.z.clamp(0.0, 0.999) * 256.0) as u8;
         (x, y, z)
     }
 
