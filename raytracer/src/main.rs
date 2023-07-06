@@ -47,7 +47,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book1/image15.jpg");
+    let path = std::path::Path::new("output/book1/image16.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -79,6 +79,11 @@ fn main() {
     world.add(Box::new(Sphere::new(
         Vec3::new(-1.0, 0.0, -1.0),
         0.5,
+        material_left,
+    )));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(-1.0, 0.0, -1.0),
+        -0.4,
         material_left,
     )));
     world.add(Box::new(Sphere::new(

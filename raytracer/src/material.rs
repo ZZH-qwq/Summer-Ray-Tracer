@@ -3,6 +3,7 @@
 use crate::hittable::*;
 use crate::ray::Ray;
 use crate::vec3::{Color, Vec3};
+use rand::Rng;
 
 pub trait Material {
     fn scatter(&self, ray: Ray, hit_record: HitRecord) -> Option<(Color, Ray)>;
@@ -74,6 +75,14 @@ impl Dielectric {
     pub fn new(ir: f64) -> Self {
         Self { ir }
     }
+
+    // 非全反射时 折射存在概率
+    pub fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+        // 施里克近似
+        let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+        let r0p = r0 * r0;
+        r0p + (1.0 - r0p) * (1.0 - cosine).powf(5.0)
+    }
 }
 
 impl Material for Dielectric {
@@ -85,9 +94,12 @@ impl Material for Dielectric {
         };
         let unit_direction = Vec3::unit_vector(ray.direction);
         let cos_theta = Vec3::dot(-unit_direction, hit_record.normal).min(1.0);
-        let sin_theta = (1.0 - cos_theta).sqrt();
-        if refraction_ratio * sin_theta > 1.0 {
-            // 全反射
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_reflact = refraction_ratio * sin_theta > 1.0;
+        let mut rng = rand::thread_rng();
+        let rand_double: f64 = rng.gen();
+        if cannot_reflact || Dielectric::reflectance(cos_theta, refraction_ratio) > rand_double {
+            // 反射
             let reflected = Vec3::reflect(unit_direction, hit_record.normal);
             Some((
                 Color::new(1.0, 1.0, 1.0),
