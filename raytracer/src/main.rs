@@ -201,9 +201,9 @@ fn main() {
     mul_progress.finish();
     for result in &results {
         for (col_name, col_rgb) in result {
-            for i in 0..col_rgb.len() {
+            for (i, pix) in col_rgb.iter().enumerate() {
                 let pixel = img.get_pixel_mut(*col_name, height - 1 - i as u32);
-                *pixel = image::Rgb([col_rgb[i].0, col_rgb[i].1, col_rgb[i].2]);
+                *pixel = image::Rgb([pix.0, pix.1, pix.2]);
             }
         }
     }
