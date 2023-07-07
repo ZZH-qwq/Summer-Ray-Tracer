@@ -103,9 +103,9 @@ fn random_scene() -> HittableList {
 fn main() {
     // 图像
     let aspect_ratio = 3.0 / 2.0;
-    let width = 300;
+    let width = 600;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 50;
+    let samples_per_pixel = 100;
     let max_depth = 50;
 
     // 生成
@@ -169,6 +169,7 @@ fn main() {
             let mut rng = rand::thread_rng();
             let mut result = vec![];
             while curr < tot_width {
+                let mut col = vec![];
                 for j in 0..tot_height {
                     let mut pixel_color = Vec3::zero();
                     for _ in 0..cur_samples_per_pixel {
@@ -183,9 +184,10 @@ fn main() {
                         pixel_color += ray_color(ray, &thread_world, cur_max_depth);
                     }
                     let rgb = (pixel_color / cur_samples_per_pixel as f64).to_u8();
-                    result.push((curr, j, rgb));
+                    col.push(rgb);
                 }
                 cur_progress.inc(1);
+                result.push((curr, col));
                 curr += step;
             }
             // 返回结果
@@ -194,13 +196,16 @@ fn main() {
         handles.push(handle);
     }
 
+    // 接收结果并汇总
     let results: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
     mul_progress.finish();
     for i in 0..results.len() {
         for j in 0..results[i].len() {
-            let pixel = img.get_pixel_mut(results[i][j].0, height - 1 - results[i][j].1);
-            let rgb = results[i][j].2;
-            *pixel = image::Rgb([rgb.0, rgb.1, rgb.2]);
+            let rgb = &results[i][j].1;
+            for k in 0..rgb.len() {
+                let pixel = img.get_pixel_mut(results[i][j].0, height - 1 - k as u32);
+                *pixel = image::Rgb([rgb[k].0, rgb[k].1, rgb[k].2]);
+            }
         }
     }
 
