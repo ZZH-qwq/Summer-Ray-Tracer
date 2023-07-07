@@ -21,9 +21,9 @@ impl HittableList {
         self.objects.push(object);
     }
 
-    pub fn clear(&mut self) {
-        self.objects.clear();
-    }
+    // pub fn clear(&mut self) {
+    //     self.objects.clear();
+    // }
 }
 
 impl Hittable for HittableList {

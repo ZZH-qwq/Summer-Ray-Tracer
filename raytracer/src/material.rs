@@ -5,7 +5,7 @@ use crate::ray::Ray;
 use crate::vec3::{Color, Vec3};
 use rand::Rng;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)>;
 }
 

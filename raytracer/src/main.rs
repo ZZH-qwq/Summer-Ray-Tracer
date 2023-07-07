@@ -10,16 +10,18 @@ use console::style;
 use hittable::*;
 use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressStyle};
 use material::*;
 use rand::Rng;
 use ray::Ray;
 use sphere::Sphere;
+use std::sync::Arc;
+use std::thread;
 use std::{fs::File, process::exit};
 use vec3::{Color, Vec3};
 
 // 接受一个光线做为参数 然后计算这条光线所产生的颜色
-fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(ray: Ray, world: &Arc<HittableList>, depth: i32) -> Color {
     // 加入了漫反射材质
     // 限制递归层数
     if depth <= 0 {
@@ -38,6 +40,7 @@ fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
     (1.0 - t) * Color::one() + t * Color::new(0.5, 0.7, 1.0)
 }
 
+// 生成随机场景
 fn random_scene() -> HittableList {
     let mut rng = rand::thread_rng();
     let mut world = HittableList::new();
@@ -100,9 +103,9 @@ fn random_scene() -> HittableList {
 fn main() {
     // 图像
     let aspect_ratio = 3.0 / 2.0;
-    let width = 1200;
+    let width = 300;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 50;
     let max_depth = 50;
 
     // 生成
@@ -114,11 +117,18 @@ fn main() {
     let progress = if option_env!("CI").unwrap_or_default() == "true" {
         ProgressBar::hidden()
     } else {
-        ProgressBar::new((height * width) as u64)
+        ProgressBar::new(width as u64)
     };
+    progress.set_style(
+        ProgressStyle::default_bar()
+            .template(
+                "{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/bue}] [{pos}/{len}] ({eta})",
+            )
+            .progress_chars("#>-"),
+    );
 
     // 物体
-    let mut world = random_scene();
+    let world = random_scene();
 
     // 镜头
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -136,29 +146,63 @@ fn main() {
         dist_to_focus,
     );
 
-    let mut rng = rand::thread_rng();
-    for j in 0..height {
-        for i in 0..width {
-            let pixel = img.get_pixel_mut(i, height - 1 - j);
-            let mut pixel_color = Vec3::zero();
-            for _ in 0..samples_per_pixel {
-                // x,y方向分量 加入了多重采样抗锯齿
-                let u_rand: f64 = rng.gen();
-                let v_rand: f64 = rng.gen();
-                let u: f64 = (i as f64 + u_rand) / ((width - 1) as f64);
-                let v: f64 = (j as f64 + v_rand) / ((height - 1) as f64);
+    // 线程
+    let thread_count = 6;
+    let mul_cam = Arc::new(cam);
+    let mul_world = Arc::new(world);
+    let mul_progress = Arc::new(progress);
+    let mut handles = vec![];
 
-                // 生成光线
-                let ray = cam.get_ray(u, v);
-                pixel_color += ray_color(ray, &world, max_depth);
+    for i in 0..thread_count {
+        let mut curr = i;
+        let step = thread_count;
+        let tot_width = width;
+        let tot_height = height;
+        let cur_samples_per_pixel = samples_per_pixel;
+        let cur_max_depth = max_depth;
+        let thread_cam = Arc::clone(&mul_cam);
+        let thread_world = Arc::clone(&mul_world);
+        let cur_progress = Arc::clone(&mul_progress);
+
+        // 生成新线程
+        let handle = thread::spawn(move || {
+            let mut rng = rand::thread_rng();
+            let mut result = vec![];
+            while curr < tot_width {
+                for j in 0..tot_height {
+                    let mut pixel_color = Vec3::zero();
+                    for _ in 0..cur_samples_per_pixel {
+                        // x,y方向分量 加入了多重采样抗锯齿
+                        let u_rand: f64 = rng.gen();
+                        let v_rand: f64 = rng.gen();
+                        let u: f64 = (curr as f64 + u_rand) / ((tot_width - 1) as f64);
+                        let v: f64 = (j as f64 + v_rand) / ((tot_height - 1) as f64);
+
+                        // 生成光线
+                        let ray = thread_cam.get_ray(u, v);
+                        pixel_color += ray_color(ray, &thread_world, cur_max_depth);
+                    }
+                    let rgb = (pixel_color / cur_samples_per_pixel as f64).to_u8();
+                    result.push((curr, j, rgb));
+                }
+                cur_progress.inc(1);
+                curr += step;
             }
-            let rgb = (pixel_color / samples_per_pixel as f64).to_u8();
+            // 返回结果
+            result
+        });
+        handles.push(handle);
+    }
+
+    let results: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
+    mul_progress.finish();
+    for i in 0..results.len() {
+        for j in 0..results[i].len() {
+            let pixel = img.get_pixel_mut(results[i][j].0, height - 1 - results[i][j].1);
+            let rgb = results[i][j].2;
             *pixel = image::Rgb([rgb.0, rgb.1, rgb.2]);
         }
-        progress.inc(1);
     }
-    progress.finish();
-    world.clear();
 
     println!(
         "Ouput image as \"{}\"",
