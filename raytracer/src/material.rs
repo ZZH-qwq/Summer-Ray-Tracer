@@ -6,7 +6,7 @@ use crate::vec3::{Color, Vec3};
 use rand::Rng;
 
 pub trait Material {
-    fn scatter(&self, ray: Ray, hit_record: HitRecord) -> Option<(Color, Ray)>;
+    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)>;
 }
 
 // 漫反射
@@ -22,7 +22,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _: Ray, hit_record: HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&self, _: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> {
         let direction = hit_record.normal + Vec3::random_unit_vector();
         if direction.near_zero() {
             Some((self.albedo, Ray::new(hit_record.point, hit_record.normal)))
@@ -49,7 +49,7 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, ray: Ray, hit_record: HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> {
         let reflected = Vec3::reflect(Vec3::unit_vector(ray.direction), hit_record.normal);
         if Vec3::dot(reflected, hit_record.normal) > 0.0 {
             Some((
@@ -86,7 +86,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, ray: Ray, hit_record: HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> {
         let refraction_ratio = if hit_record.front_face {
             1.0 / self.ir
         } else {

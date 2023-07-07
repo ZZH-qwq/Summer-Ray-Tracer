@@ -43,9 +43,9 @@ impl Vec3 {
 
     pub fn to_u8(self) -> (u8, u8, u8) {
         // 加入 gamma 矫正
-        let x = (self.x.clamp(0.0, 0.999).sqrt() * 256.0) as u8;
-        let y = (self.y.clamp(0.0, 0.999).sqrt() * 256.0) as u8;
-        let z = (self.z.clamp(0.0, 0.999).sqrt() * 256.0) as u8;
+        let x = (self.x.clamp(0.0, 0.999) * 256.0) as u8;
+        let y = (self.y.clamp(0.0, 0.999) * 256.0) as u8;
+        let z = (self.z.clamp(0.0, 0.999) * 256.0) as u8;
         (x, y, z)
     }
 
@@ -100,7 +100,7 @@ impl Vec3 {
 
     pub fn near_zero(&self) -> bool {
         let s = 1e-8;
-        self.x < s && self.y < s && self.z < s
+        self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
     }
 
     pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {

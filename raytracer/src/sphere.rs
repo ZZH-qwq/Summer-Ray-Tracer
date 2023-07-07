@@ -2,6 +2,7 @@
 
 use crate::hittable::*;
 use crate::material::Material;
+use crate::ray::Ray;
 use crate::vec3::Vec3;
 
 #[derive(Debug, Copy, Clone)]
@@ -22,11 +23,11 @@ impl<M: Material> Sphere<M> {
 }
 
 impl<M: Material> Hittable for Sphere<M> {
-    fn hit(&self, ray: crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = ray.origin - self.center;
-        let a = Vec3::dot(ray.direction, ray.direction);
+        let a = ray.direction.length_squared();
         let half_b = Vec3::dot(oc, ray.direction);
-        let c = Vec3::dot(oc, oc) - self.radius * self.radius;
+        let c = oc.length_squared() - self.radius * self.radius;
         let discriminant = half_b * half_b - a * c;
         // 按情况返回值
         if discriminant < 0.0 {
@@ -50,7 +51,7 @@ impl<M: Material> Hittable for Sphere<M> {
                     root,
                     (p - self.center) / self.radius,
                     &self.material,
-                    ray,
+                    *ray,
                 ))
             }
         } else {
@@ -61,7 +62,7 @@ impl<M: Material> Hittable for Sphere<M> {
                 root,
                 (p - self.center) / self.radius,
                 &self.material,
-                ray,
+                *ray,
             ))
         }
     }
