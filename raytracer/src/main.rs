@@ -19,16 +19,16 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Vec3};
 
 // 接受一个光线做为参数 然后计算这条光线所产生的颜色
-fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
     // 加入了漫反射材质
     // 限制递归层数
     if depth <= 0 {
         return Color::zero();
     }
     // 调用不同材质产生不同的反射
-    if let Some(hit_record) = world.hit(&ray, 0.001, f64::INFINITY) {
+    if let Some(hit_record) = world.hit(ray, 0.001, f64::INFINITY) {
         if let Some((attenuation, scattered)) = hit_record.material.scatter(&ray, &hit_record) {
-            return attenuation * ray_color(&scattered, world, depth - 1);
+            return attenuation * ray_color(scattered, world, depth - 1);
         } else {
             return Color::zero();
         }
@@ -124,7 +124,7 @@ fn main() {
 
                 // 生成光线
                 let ray = cam.get_ray(u, v);
-                pixel_color += ray_color(&ray, &world, max_depth);
+                pixel_color += ray_color(ray, &world, max_depth);
             }
             let rgb = (pixel_color / samples_per_pixel as f64).to_u8();
             *pixel = image::Rgb([rgb.0, rgb.1, rgb.2]);

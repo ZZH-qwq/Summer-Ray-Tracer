@@ -43,9 +43,9 @@ impl Vec3 {
 
     pub fn to_u8(self) -> (u8, u8, u8) {
         // 加入 gamma 矫正
-        let x = (self.x.clamp(0.0, 0.999) * 256.0) as u8;
-        let y = (self.y.clamp(0.0, 0.999) * 256.0) as u8;
-        let z = (self.z.clamp(0.0, 0.999) * 256.0) as u8;
+        let x = (self.x.sqrt().clamp(0.0, 0.999) * 256.0) as u8;
+        let y = (self.y.sqrt().clamp(0.0, 0.999) * 256.0) as u8;
+        let z = (self.z.sqrt().clamp(0.0, 0.999) * 256.0) as u8;
         (x, y, z)
     }
 

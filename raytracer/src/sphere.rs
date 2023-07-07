@@ -23,7 +23,7 @@ impl<M: Material> Sphere<M> {
 }
 
 impl<M: Material> Hittable for Sphere<M> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = ray.origin - self.center;
         let a = ray.direction.length_squared();
         let half_b = Vec3::dot(oc, ray.direction);
@@ -51,7 +51,7 @@ impl<M: Material> Hittable for Sphere<M> {
                     root,
                     (p - self.center) / self.radius,
                     &self.material,
-                    *ray,
+                    ray,
                 ))
             }
         } else {
@@ -62,7 +62,7 @@ impl<M: Material> Hittable for Sphere<M> {
                 root,
                 (p - self.center) / self.radius,
                 &self.material,
-                *ray,
+                ray,
             ))
         }
     }
