@@ -105,7 +105,7 @@ fn main() {
     let aspect_ratio = 3.0 / 2.0;
     let width = 600;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 50;
     let max_depth = 50;
 
     // 生成
@@ -199,12 +199,11 @@ fn main() {
     // 接收结果并汇总
     let results: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
     mul_progress.finish();
-    for i in 0..results.len() {
-        for j in 0..results[i].len() {
-            let rgb = &results[i][j].1;
-            for k in 0..rgb.len() {
-                let pixel = img.get_pixel_mut(results[i][j].0, height - 1 - k as u32);
-                *pixel = image::Rgb([rgb[k].0, rgb[k].1, rgb[k].2]);
+    for result in &results {
+        for (col_name, col_rgb) in result {
+            for i in 0..col_rgb.len() {
+                let pixel = img.get_pixel_mut(*col_name, height - 1 - i as u32);
+                *pixel = image::Rgb([col_rgb[i].0, col_rgb[i].1, col_rgb[i].2]);
             }
         }
     }
