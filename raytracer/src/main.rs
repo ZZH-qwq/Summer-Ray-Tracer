@@ -47,7 +47,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book1/image17.jpg");
+    let path = std::path::Path::new("output/book1/image18.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -60,55 +60,46 @@ fn main() {
 
     // 物体
     let mut world = HittableList::new();
-    let r = 2.0_f64.sqrt() / 2.0;
 
-    let material_left = Lambertian::new(Color::new(0.0, 0.0, 1.0));
-    let material_right = Lambertian::new(Color::new(1.0, 0.0, 0.0));
+    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
+    let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
+    let material_left = Dielectric::new(1.5);
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
 
     world.add(Box::new(Sphere::new(
-        Vec3::new(-r, 0.0, -1.0),
-        r,
+        Vec3::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    )));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(0.0, 0.0, -1.0),
+        0.5,
+        material_center,
+    )));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(-1.0, 0.0, -1.0),
+        0.5,
         material_left,
     )));
     world.add(Box::new(Sphere::new(
-        Vec3::new(r, 0.0, -1.0),
-        r,
+        Vec3::new(-1.0, 0.0, -1.0),
+        -0.45,
+        material_left,
+    )));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(1.0, 0.0, -1.0),
+        0.5,
         material_right,
     )));
 
-    // let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    // let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    // let material_left = Dielectric::new(1.5);
-    // let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
-
-    // world.add(Box::new(Sphere::new(
-    //     Vec3::new(0.0, -100.5, -1.0),
-    //     100.0,
-    //     material_ground,
-    // )));
-    // world.add(Box::new(Sphere::new(
-    //     Vec3::new(0.0, 0.0, -1.0),
-    //     0.5,
-    //     material_center,
-    // )));
-    // world.add(Box::new(Sphere::new(
-    //     Vec3::new(-1.0, 0.0, -1.0),
-    //     0.5,
-    //     material_left,
-    // )));
-    // world.add(Box::new(Sphere::new(
-    //     Vec3::new(-1.0, 0.0, -1.0),
-    //     -0.4,
-    //     material_left,
-    // )));
-    // world.add(Box::new(Sphere::new(
-    //     Vec3::new(1.0, 0.0, -1.0),
-    //     0.5,
-    //     material_right,
-    // )));
-
     // 镜头
-    let cam = Camera::new(90.0, aspect_ratio);
+    let cam = Camera::new(
+        Vec3::new(-2.0, 2.0, 1.0),
+        Vec3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        90.0,
+        aspect_ratio,
+    );
 
     let mut rng = rand::thread_rng();
     for j in 0..height {
