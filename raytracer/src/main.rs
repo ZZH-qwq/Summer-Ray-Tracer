@@ -26,7 +26,7 @@ fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
         return Color::zero();
     }
     // 调用不同材质产生不同的反射
-    if let Some(hit_record) = world.hit(ray, 0.001, f64::INFINITY) {
+    if let Some(hit_record) = world.hit(ray, 0.0001, f64::INFINITY) {
         if let Some((attenuation, scattered)) = hit_record.material.scatter(&ray, &hit_record) {
             return attenuation * ray_color(scattered, world, depth - 1);
         } else {
@@ -47,7 +47,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book1/image18.jpg");
+    let path = std::path::Path::new("output/book1/image19.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -97,7 +97,7 @@ fn main() {
         Vec3::new(-2.0, 2.0, 1.0),
         Vec3::new(0.0, 0.0, -1.0),
         Vec3::new(0.0, 1.0, 0.0),
-        90.0,
+        20.0,
         aspect_ratio,
     );
 
