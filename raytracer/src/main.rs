@@ -38,16 +38,75 @@ fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
     (1.0 - t) * Color::one() + t * Color::new(0.5, 0.7, 1.0)
 }
 
+fn random_scene() -> HittableList {
+    let mut rng = rand::thread_rng();
+    let mut world = HittableList::new();
+
+    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        ground_material,
+    )));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat: f64 = rng.gen();
+            let center = Vec3::new(
+                a as f64 + 0.9 * rng.gen::<f64>(),
+                0.2,
+                b as f64 + 0.9 * rng.gen::<f64>(),
+            );
+
+            if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    // diffus
+                    let albedo = Color::random() * Color::random();
+                    world.add(Box::new(Sphere::new(center, 0.2, Lambertian::new(albedo))));
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = 0.5 * Color::one() + 0.5 * Color::random();
+                    let fuzz = rng.gen_range(0.0..0.5);
+                    world.add(Box::new(Sphere::new(center, 0.2, Metal::new(albedo, fuzz))));
+                } else {
+                    // glass
+                    world.add(Box::new(Sphere::new(center, 0.2, Dielectric::new(1.5))));
+                }
+            }
+        }
+    }
+
+    world.add(Box::new(Sphere::new(
+        Vec3::new(0.0, 1.0, 0.0),
+        1.0,
+        Dielectric::new(1.5),
+    )));
+
+    world.add(Box::new(Sphere::new(
+        Vec3::new(-4.0, 1.0, 0.0),
+        1.0,
+        Lambertian::new(Vec3::new(0.4, 0.2, 0.1)),
+    )));
+
+    world.add(Box::new(Sphere::new(
+        Vec3::new(4.0, 1.0, 0.0),
+        1.0,
+        Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0),
+    )));
+
+    world
+}
+
 fn main() {
     // 图像
-    let aspect_ratio = 16.0 / 9.0;
-    let width = 400;
+    let aspect_ratio = 3.0 / 2.0;
+    let width = 1200;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 500;
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book1/image20.jpg");
+    let path = std::path::Path::new("output/book1/image21.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -59,45 +118,14 @@ fn main() {
     };
 
     // 物体
-    let mut world = HittableList::new();
-
-    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left = Dielectric::new(1.5);
-    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
-
-    world.add(Box::new(Sphere::new(
-        Vec3::new(0.0, -100.5, -1.0),
-        100.0,
-        material_ground,
-    )));
-    world.add(Box::new(Sphere::new(
-        Vec3::new(0.0, 0.0, -1.0),
-        0.5,
-        material_center,
-    )));
-    world.add(Box::new(Sphere::new(
-        Vec3::new(-1.0, 0.0, -1.0),
-        0.5,
-        material_left,
-    )));
-    world.add(Box::new(Sphere::new(
-        Vec3::new(-1.0, 0.0, -1.0),
-        -0.45,
-        material_left,
-    )));
-    world.add(Box::new(Sphere::new(
-        Vec3::new(1.0, 0.0, -1.0),
-        0.5,
-        material_right,
-    )));
+    let mut world = random_scene();
 
     // 镜头
-    let lookfrom = Vec3::new(3.0, 3.0, 2.0);
-    let lookat = Vec3::new(0.0, 0.0, -1.0);
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = (lookfrom - lookat).length();
-    let aperture = 2.0;
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
     let cam = Camera::new(
         lookfrom,
         lookat,

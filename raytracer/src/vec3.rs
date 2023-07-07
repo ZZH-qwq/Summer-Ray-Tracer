@@ -70,6 +70,11 @@ impl Vec3 {
         v / v.length()
     }
 
+    pub fn random() -> Vec3 {
+        let mut rng = rand::thread_rng();
+        Vec3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>())
+    }
+
     pub fn random_in_unit_sphere() -> Vec3 {
         let mut rng = rand::thread_rng();
         let mut v: Vec3;
