@@ -20,15 +20,13 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(
-        lookfrom: Vec3,
-        lookat: Vec3,
+        view_point: (Vec3, Vec3),
         vup: Vec3,
         vfov: f64,
         aspect_ratio: f64,
         aperture: f64,
         focus_dist: f64,
-        time0: f64,
-        time1: f64,
+        time: (f64, f64),
     ) -> Self {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
@@ -36,15 +34,17 @@ impl Camera {
         let viewport_width = viewport_height * aspect_ratio;
 
         // 镜头位置与角度
-        let w = Vec3::unit_vector(lookfrom - lookat);
+        let w = Vec3::unit_vector(view_point.0 - view_point.1);
         let u = Vec3::unit_vector(Vec3::cross(vup, w));
         let v = Vec3::cross(w, u);
 
-        let origin = lookfrom;
+        let origin = view_point.0;
         let horizontal = focus_dist * viewport_width * u;
         let vertical = focus_dist * viewport_height * v;
         let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - focus_dist * w;
         let lens_radius = aperture / 2.0;
+
+        let (time0, time1) = time;
 
         Self {
             origin,

@@ -148,15 +148,13 @@ fn main() {
     let dist_to_focus = 10.0;
     let aperture = 0.1;
     let cam = Camera::new(
-        lookfrom,
-        lookat,
+        (lookfrom, lookat),
         vup,
         20.0,
         aspect_ratio,
         aperture,
         dist_to_focus,
-        0.0,
-        1.0,
+        (0.0, 1.0),
     );
 
     // 线程
