@@ -2,6 +2,7 @@
 
 use crate::ray::Ray;
 use crate::vec3::Vec3;
+use rand::Rng;
 
 #[derive(Copy, Clone)]
 pub struct Camera {
@@ -13,6 +14,8 @@ pub struct Camera {
     v: Vec3,
     // w: Vec3,
     lens_radius: f64,
+    time0: f64,
+    time1: f64,
 }
 
 impl Camera {
@@ -24,6 +27,8 @@ impl Camera {
         aspect_ratio: f64,
         aperture: f64,
         focus_dist: f64,
+        time0: f64,
+        time1: f64,
     ) -> Self {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
@@ -50,15 +55,19 @@ impl Camera {
             v,
             // w,
             lens_radius,
+            time0,
+            time1,
         }
     }
 
     pub fn get_ray(&self, s: f64, t: f64) -> Ray {
         let rd = self.lens_radius * Vec3::random_in_unit_disk();
         let offset = self.u * rd.x + self.v * rd.y;
+        let mut rng = rand::thread_rng();
         Ray::new(
             self.origin + offset,
             self.lower_left_corner + self.horizontal * s + self.vertical * t - self.origin - offset,
+            rng.gen_range(self.time0..self.time1),
         )
     }
 }

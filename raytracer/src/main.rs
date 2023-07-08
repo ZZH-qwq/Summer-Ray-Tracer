@@ -2,6 +2,7 @@ mod camera;
 mod hittable;
 mod hittable_list;
 mod material;
+mod moving_sphere;
 mod ray;
 mod sphere;
 mod vec3;
@@ -12,6 +13,7 @@ use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::{ProgressBar, ProgressStyle};
 use material::*;
+use moving_sphere::MovingSphere;
 use rand::Rng;
 use ray::Ray;
 use sphere::Sphere;
@@ -65,7 +67,16 @@ fn random_scene() -> HittableList {
                 if choose_mat < 0.8 {
                     // diffus
                     let albedo = Color::random() * Color::random();
-                    world.add(Box::new(Sphere::new(center, 0.2, Lambertian::new(albedo))));
+                    // 添加了运动的球体
+                    let center1 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
+                    world.add(Box::new(MovingSphere::new(
+                        center,
+                        center1,
+                        0.0,
+                        1.0,
+                        0.2,
+                        Lambertian::new(albedo),
+                    )));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = 0.5 * Color::one() + 0.5 * Color::random();
@@ -102,14 +113,14 @@ fn random_scene() -> HittableList {
 
 fn main() {
     // 图像
-    let aspect_ratio = 3.0 / 2.0;
-    let width = 600;
+    let aspect_ratio = 16.0 / 9.0;
+    let width = 400;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 50;
+    let samples_per_pixel = 100;
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book1/image21.jpg");
+    let path = std::path::Path::new("output/book2/image1.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -144,6 +155,8 @@ fn main() {
         aspect_ratio,
         aperture,
         dist_to_focus,
+        0.0,
+        1.0,
     );
 
     // 线程
