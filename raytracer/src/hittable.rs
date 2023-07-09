@@ -2,7 +2,7 @@
 // 具体物体需要实现 Hittable 的 trait
 // 以计算与光线碰撞的具体位置
 
-use crate::aabb::AABB;
+use crate::aabb::Aabb;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
@@ -50,5 +50,5 @@ impl<'a> HitRecord<'a> {
 
 pub trait Hittable: Send + Sync {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb>;
 }

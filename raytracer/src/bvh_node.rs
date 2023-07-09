@@ -1,6 +1,6 @@
 // BVH节点类
 
-use crate::aabb::AABB;
+use crate::aabb::Aabb;
 use crate::hittable::*;
 use crate::hittable_list::HittableList;
 use rand::Rng;
@@ -8,11 +8,11 @@ use rand::Rng;
 pub struct BVHNode {
     left: Box<dyn Hittable>,
     right: Box<dyn Hittable>,
-    bounding_box: AABB,
+    bounding_box: Aabb,
 }
 
 impl BVHNode {
-    pub fn create_tree(
+    fn create_tree(
         mut objects: Vec<Box<dyn Hittable>>,
         time0: f64,
         time1: f64,
@@ -33,7 +33,7 @@ impl BVHNode {
                 let b = a.split_off(a.len() / 2);
                 let left = Self::create_tree(a, time0, time1);
                 let right = Self::create_tree(b, time0, time1);
-                let bounding_box = AABB::surrounding_box(
+                let bounding_box = Aabb::surrounding_box(
                     &left.bounding_box(time0, time1).unwrap(),
                     &right.bounding_box(time0, time1).unwrap(),
                 );
@@ -46,7 +46,7 @@ impl BVHNode {
         }
     }
 
-    pub fn new(hittable_list: HittableList, time0: f64, time1: f64) -> Box<dyn Hittable> {
+    pub fn create(hittable_list: HittableList, time0: f64, time1: f64) -> Box<dyn Hittable> {
         Self::create_tree(hittable_list.objects, time0, time1)
     }
 }
@@ -72,7 +72,7 @@ impl Hittable for BVHNode {
         }
     }
 
-    fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {
+    fn bounding_box(&self, _: f64, _: f64) -> Option<Aabb> {
         Some(self.bounding_box)
     }
 }

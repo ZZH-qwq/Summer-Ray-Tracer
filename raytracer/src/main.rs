@@ -149,7 +149,7 @@ fn main() {
 
     // 物体
     let world = HittableList {
-        objects: vec![BVHNode::new(random_scene(), 0.0, 1.0)],
+        objects: vec![BVHNode::create(random_scene(), 0.0, 1.0)],
     };
 
     // 镜头
