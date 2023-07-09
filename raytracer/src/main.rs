@@ -7,6 +7,7 @@ mod material;
 mod moving_sphere;
 mod ray;
 mod sphere;
+mod texture;
 mod vec3;
 use camera::Camera;
 use console::style;
@@ -22,6 +23,7 @@ use sphere::Sphere;
 use std::sync::Arc;
 use std::thread;
 use std::{fs::File, process::exit};
+use texture::*;
 use vec3::{Color, Vec3};
 
 use crate::bvh_node::BVHNode;
@@ -51,7 +53,10 @@ fn random_scene() -> HittableList {
     let mut rng = rand::thread_rng();
     let mut world = HittableList::new();
 
-    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let ground_material = Lambertian::new(CheckerTexture::new(
+        SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+        SolidColor::new(Color::new(0.9, 0.9, 0.9)),
+    ));
     world.add(Box::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -70,7 +75,7 @@ fn random_scene() -> HittableList {
             if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if choose_mat < 0.8 {
                     // diffus
-                    let albedo = Color::random() * Color::random();
+                    let albedo = SolidColor::new(Color::random() * Color::random());
                     // 添加了运动的球体
                     let center1 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
                     world.add(Box::new(MovingSphere::new(
@@ -103,7 +108,7 @@ fn random_scene() -> HittableList {
     world.add(Box::new(Sphere::new(
         Vec3::new(-4.0, 1.0, 0.0),
         1.0,
-        Lambertian::new(Vec3::new(0.4, 0.2, 0.1)),
+        Lambertian::new(SolidColor::new(Vec3::new(0.4, 0.2, 0.1))),
     )));
 
     world.add(Box::new(Sphere::new(

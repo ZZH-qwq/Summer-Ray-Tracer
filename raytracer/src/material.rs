@@ -2,41 +2,46 @@
 
 use crate::hittable::*;
 use crate::ray::Ray;
+use crate::texture::*;
 use crate::vec3::{Color, Vec3};
 use rand::Rng;
+use std::sync::Arc;
 
 pub trait Material: Send + Sync {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)>;
 }
 
 // 漫反射
-#[derive(Debug, Copy, Clone)]
-pub struct Lambertian {
-    pub albedo: Color,
+pub struct Lambertian<T: Texture> {
+    pub albedo: T,
 }
 
-impl Lambertian {
-    pub fn new(color: Color) -> Self {
-        Self { albedo: color }
+impl<T: Texture> Lambertian<T> {
+    pub fn new(albedo: T) -> Self {
+        Self { albedo }
     }
 }
 
-impl Material for Lambertian {
+impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> {
         let direction = hit_record.normal + Vec3::random_unit_vector();
         if direction.near_zero() {
             Some((
-                self.albedo,
+                self.albedo
+                    .value(hit_record.u, hit_record.v, hit_record.point),
                 Ray::new(hit_record.point, hit_record.normal, ray.time),
             ))
         } else {
-            Some((self.albedo, Ray::new(hit_record.point, direction, ray.time)))
+            Some((
+                self.albedo
+                    .value(hit_record.u, hit_record.v, hit_record.point),
+                Ray::new(hit_record.point, direction, ray.time),
+            ))
         }
     }
 }
 
 // 金属
-#[derive(Debug, Copy, Clone)]
 pub struct Metal {
     pub albedo: Color,
     pub fuzz: f64,
@@ -70,7 +75,6 @@ impl Material for Metal {
 }
 
 // 折射
-#[derive(Debug, Copy, Clone)]
 pub struct Dielectric {
     pub ir: f64,
 }
