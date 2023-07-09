@@ -35,13 +35,13 @@ impl Perlin {
 
     fn trilinear_interp(c: Vec<Vec<Vec<f64>>>, u: f64, v: f64, w: f64) -> f64 {
         let mut accum = 0.0;
-        for i in 0..2 {
-            for j in 0..2 {
-                for k in 0..2 {
+        for (i, it3) in c.iter().enumerate().take(2) {
+            for (j, it2) in it3.iter().enumerate().take(2) {
+                for (k, it) in it2.iter().enumerate().take(2) {
                     accum += (i as f64 * u + (1.0 - i as f64) * (1.0 - u))
                         * (j as f64 * v + (1.0 - j as f64) * (1.0 - v))
                         * (k as f64 * w + (1.0 - k as f64) * (1.0 - w))
-                        * c[i][j][k];
+                        * (*it);
                 }
             }
         }
