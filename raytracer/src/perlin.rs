@@ -27,7 +27,7 @@ impl Perlin {
     }
 
     fn perlin_generate_perm(len: usize) -> Vec<usize> {
-        let mut p: Vec<usize> = (0..len).map(|i| i).collect();
+        let mut p: Vec<usize> = (0..len).collect();
         let mut rng = rand::thread_rng();
         p.shuffle(&mut rng);
         p
