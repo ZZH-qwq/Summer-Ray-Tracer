@@ -1,5 +1,6 @@
 // 球体类
 
+use crate::aabb::AABB;
 use crate::hittable::*;
 use crate::material::Material;
 use crate::ray::Ray;
@@ -65,5 +66,12 @@ impl<M: Material> Hittable for Sphere<M> {
                 ray,
             ))
         }
+    }
+
+    fn bounding_box(&self, _: f64, _: f64) -> Option<crate::aabb::AABB> {
+        Some(AABB::new(
+            self.center - Vec3::new(self.radius, self.radius, self.radius),
+            self.center + Vec3::new(self.radius, self.radius, self.radius),
+        ))
     }
 }

@@ -1,3 +1,5 @@
+mod aabb;
+mod bvh_node;
 mod camera;
 mod hittable;
 mod hittable_list;
@@ -21,6 +23,8 @@ use std::sync::Arc;
 use std::thread;
 use std::{fs::File, process::exit};
 use vec3::{Color, Vec3};
+
+use crate::bvh_node::BVHNode;
 
 // 接受一个光线做为参数 然后计算这条光线所产生的颜色
 fn ray_color(ray: Ray, world: &Arc<HittableList>, depth: i32) -> Color {
@@ -120,7 +124,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image1.jpg");
+    let path = std::path::Path::new("output/book2/image2.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -139,7 +143,9 @@ fn main() {
     );
 
     // 物体
-    let world = random_scene();
+    let world = HittableList {
+        objects: vec![BVHNode::new(random_scene(), 0.0, 1.0)],
+    };
 
     // 镜头
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);

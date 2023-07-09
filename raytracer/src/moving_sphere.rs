@@ -1,5 +1,6 @@
 // 运动的球体类
 
+use crate::aabb::AABB;
 use crate::hittable::*;
 use crate::material::Material;
 use crate::ray::Ray;
@@ -82,5 +83,18 @@ impl<M: Material> Hittable for MovingSphere<M> {
                 ray,
             ))
         }
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<crate::aabb::AABB> {
+        Some(AABB::surrounding_box(
+            &AABB::new(
+                self.center(time0) - Vec3::new(self.radius, self.radius, self.radius),
+                self.center(time0) + Vec3::new(self.radius, self.radius, self.radius),
+            ),
+            &AABB::new(
+                self.center(time1) - Vec3::new(self.radius, self.radius, self.radius),
+                self.center(time1) + Vec3::new(self.radius, self.radius, self.radius),
+            ),
+        ))
     }
 }

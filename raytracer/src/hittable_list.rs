@@ -1,6 +1,7 @@
 // 可交互物体列表
 // 物体需要支持 Hittable 的 trait
 
+use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 
@@ -37,5 +38,22 @@ impl Hittable for HittableList {
             }
         }
         hit_result
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<crate::aabb::AABB> {
+        if self.objects.is_empty() {
+            None
+        } else {
+            self.objects.iter().fold(
+                self.objects[0].bounding_box(time0, time1),
+                |bounding_box, hitable| match bounding_box {
+                    Some(bounding_box) => match hitable.bounding_box(time0, time1) {
+                        Some(this_box) => Some(AABB::surrounding_box(&bounding_box, &this_box)),
+                        None => None,
+                    },
+                    None => None,
+                },
+            )
+        }
     }
 }
