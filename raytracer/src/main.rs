@@ -120,6 +120,27 @@ fn random_scene() -> HittableList {
     world
 }
 
+fn two_spheres() -> HittableList {
+    let mut objects = HittableList::new();
+    objects.add(Box::new(Sphere::new(
+        Vec3::new(0.0, -10.0, 0.0),
+        10.0,
+        Lambertian::new(CheckerTexture::new(
+            SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+            SolidColor::new(Color::new(0.9, 0.9, 0.9)),
+        )),
+    )));
+    objects.add(Box::new(Sphere::new(
+        Vec3::new(0.0, 10.0, 0.0),
+        10.0,
+        Lambertian::new(CheckerTexture::new(
+            SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+            SolidColor::new(Color::new(0.9, 0.9, 0.9)),
+        )),
+    )));
+    objects
+}
+
 fn main() {
     // 图像
     let aspect_ratio = 16.0 / 9.0;
@@ -129,7 +150,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image2.jpg");
+    let path = std::path::Path::new("output/book2/image3.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -147,21 +168,41 @@ fn main() {
             .progress_chars("#>-"),
     );
 
-    // 物体
-    let world = HittableList {
-        objects: vec![BVHNode::create(random_scene(), 0.0, 1.0)],
+    // 世界
+    let world_type = 1;
+    let lookfrom: Vec3;
+    let lookat: Vec3;
+    let vfov: f64;
+    let aperture: f64;
+    let world: HittableList;
+    match world_type {
+        0 => {
+            world = HittableList {
+                objects: vec![BVHNode::create(random_scene(), 0.0, 1.0)],
+            };
+            lookfrom = Vec3::new(13.0, 2.0, 3.0);
+            lookat = Vec3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.1;
+        }
+        _ => {
+            world = HittableList {
+                objects: vec![BVHNode::create(two_spheres(), 0.0, 1.0)],
+            };
+            lookfrom = Vec3::new(13.0, 2.0, 3.0);
+            lookat = Vec3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.0;
+        }
     };
 
     // 镜头
-    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
-    let lookat = Vec3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
-    let aperture = 0.1;
     let cam = Camera::new(
         (lookfrom, lookat),
         vup,
-        20.0,
+        vfov,
         aspect_ratio,
         aperture,
         dist_to_focus,
