@@ -5,6 +5,7 @@ mod hittable;
 mod hittable_list;
 mod material;
 mod moving_sphere;
+mod perlin;
 mod ray;
 mod sphere;
 mod texture;
@@ -141,6 +142,21 @@ fn two_spheres() -> HittableList {
     objects
 }
 
+fn two_perlin_spheres() -> HittableList {
+    let mut objects = HittableList::new();
+    objects.add(Box::new(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Lambertian::new(NoiseTexture::new()),
+    )));
+    objects.add(Box::new(Sphere::new(
+        Vec3::new(0.0, 2.0, 0.0),
+        2.0,
+        Lambertian::new(NoiseTexture::new()),
+    )));
+    objects
+}
+
 fn main() {
     // 图像
     let aspect_ratio = 16.0 / 9.0;
@@ -150,7 +166,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image3.jpg");
+    let path = std::path::Path::new("output/book2/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -169,7 +185,7 @@ fn main() {
     );
 
     // 世界
-    let world_type = 1;
+    let world_type = 2;
     let lookfrom: Vec3;
     let lookat: Vec3;
     let vfov: f64;
@@ -185,9 +201,18 @@ fn main() {
             vfov = 20.0;
             aperture = 0.1;
         }
-        _ => {
+        1 => {
             world = HittableList {
                 objects: vec![BVHNode::create(two_spheres(), 0.0, 1.0)],
+            };
+            lookfrom = Vec3::new(13.0, 2.0, 3.0);
+            lookat = Vec3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.0;
+        }
+        _ => {
+            world = HittableList {
+                objects: vec![BVHNode::create(two_perlin_spheres(), 0.0, 1.0)],
             };
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);

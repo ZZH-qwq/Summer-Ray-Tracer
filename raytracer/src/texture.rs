@@ -1,5 +1,6 @@
 // 纹理
 
+use crate::perlin::Perlin;
 use crate::vec3::{Color, Vec3};
 
 pub trait Texture: Send + Sync {
@@ -42,5 +43,23 @@ impl<T1: Texture, T2: Texture> Texture for CheckerTexture<T1, T2> {
         } else {
             self.even.value(u, v, p)
         }
+    }
+}
+
+pub struct NoiseTexture {
+    noise: Perlin,
+}
+
+impl NoiseTexture {
+    pub fn new() -> Self {
+        Self {
+            noise: Perlin::new(),
+        }
+    }
+}
+
+impl Texture for NoiseTexture {
+    fn value(&self, _: f64, _: f64, p: Vec3) -> Color {
+        Color::one() * self.noise.noise(p)
     }
 }
