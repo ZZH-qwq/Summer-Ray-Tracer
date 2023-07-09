@@ -147,12 +147,12 @@ fn two_perlin_spheres() -> HittableList {
     objects.add(Box::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Lambertian::new(NoiseTexture::new()),
+        Lambertian::new(NoiseTexture::new(4.0)),
     )));
     objects.add(Box::new(Sphere::new(
         Vec3::new(0.0, 2.0, 0.0),
         2.0,
-        Lambertian::new(NoiseTexture::new()),
+        Lambertian::new(NoiseTexture::new(4.0)),
     )));
     objects
 }
@@ -166,7 +166,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image9.jpg");
+    let path = std::path::Path::new("output/book2/image10.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
