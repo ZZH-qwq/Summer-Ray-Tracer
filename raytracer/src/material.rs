@@ -5,7 +5,6 @@ use crate::ray::Ray;
 use crate::texture::*;
 use crate::vec3::{Color, Vec3};
 use rand::Rng;
-use std::sync::Arc;
 
 pub trait Material: Send + Sync {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)>;
