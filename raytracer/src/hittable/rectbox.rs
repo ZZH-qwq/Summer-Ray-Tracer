@@ -58,12 +58,7 @@ impl RectBox {
             material.clone(),
         )));
         sides.add(Box::new(YZRect::new(
-            p0.y,
-            p1.y,
-            p0.z,
-            p1.z,
-            p0.x,
-            material.clone(),
+            p0.y, p1.y, p0.z, p1.z, p0.x, material,
         )));
         Self {
             min: p0,
