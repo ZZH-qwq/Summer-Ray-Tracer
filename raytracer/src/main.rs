@@ -156,6 +156,19 @@ fn two_perlin_spheres() -> HittableList {
     objects
 }
 
+fn earth() -> HittableList {
+    let mut objects = HittableList::new();
+    objects.add(Box::new(Sphere::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        2.0,
+        Lambertian::new(ImageTexture::new(
+            "raytracer/src/img/earthmap.jpg".to_string(),
+        )),
+    )));
+
+    objects
+}
+
 fn main() {
     // 图像
     let aspect_ratio = 16.0 / 9.0;
@@ -165,7 +178,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image13.jpg");
+    let path = std::path::Path::new("output/book2/image15.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -184,7 +197,7 @@ fn main() {
     );
 
     // 世界
-    let world_type = 2;
+    let world_type = 3;
     let lookfrom: Vec3;
     let lookat: Vec3;
     let vfov: f64;
@@ -209,9 +222,18 @@ fn main() {
             vfov = 20.0;
             aperture = 0.0;
         }
-        _ => {
+        2 => {
             world = HittableList {
                 objects: vec![BVHNode::create(two_perlin_spheres(), 0.0, 1.0)],
+            };
+            lookfrom = Vec3::new(13.0, 2.0, 3.0);
+            lookat = Vec3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.0;
+        }
+        _ => {
+            world = HittableList {
+                objects: vec![BVHNode::create(earth(), 0.0, 1.0)],
             };
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);

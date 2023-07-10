@@ -2,6 +2,8 @@
 
 use crate::perlin::Perlin;
 use crate::vec3::{Color, Vec3};
+use image::{GenericImageView, ImageBuffer, Rgb};
+use std::path::Path;
 
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Color;
@@ -63,5 +65,37 @@ impl NoiseTexture {
 impl Texture for NoiseTexture {
     fn value(&self, _: f64, _: f64, p: Vec3) -> Color {
         Color::one() * 0.5 * (1.0 + (self.scale * p.z + 10.0 * self.noise.trub(p, 7)).sin())
+    }
+}
+
+pub struct ImageTexture {
+    data: ImageBuffer<Rgb<u8>, Vec<u8>>,
+    width: u32,
+    height: u32,
+}
+
+impl ImageTexture {
+    pub fn new(file_name: String) -> Self {
+        let im = image::open(&Path::new(&file_name)).unwrap();
+        let dim = im.dimensions();
+        let data = im.into_rgb8();
+        Self {
+            data,
+            width: dim.0,
+            height: dim.1,
+        }
+    }
+}
+
+impl Texture for ImageTexture {
+    fn value(&self, u: f64, v: f64, _: Vec3) -> Color {
+        let i = ((u * self.width as f64) as u32).clamp(0, self.width - 1);
+        let j = ((v * self.height as f64) as u32).clamp(0, self.height - 1);
+        let rgb = self.data[(i, j)].0;
+        Color::new(
+            (rgb[0] as f64) / 255.0,
+            (rgb[1] as f64) / 255.0,
+            (rgb[2] as f64) / 255.0,
+        )
     }
 }
