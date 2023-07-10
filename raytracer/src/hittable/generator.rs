@@ -1,6 +1,6 @@
 // 生成器
 
-use crate::hittable::aarect::XYRect;
+use crate::hittable::aarect::*;
 use crate::hittable::hittable_list::HittableList;
 use crate::hittable::moving_sphere::MovingSphere;
 use crate::hittable::sphere::Sphere;
@@ -150,5 +150,25 @@ pub fn simple_light() -> HittableList {
         -2.0,
         DiffuseLight::new(SolidColor::new(Color::new(4.0, 4.0, 4.0))),
     )));
+    objects
+}
+
+pub fn cornell_box() -> HittableList {
+    let mut objects = HittableList::new();
+
+    let red = Lambertian::new(SolidColor::new(Color::new(0.65, 0.05, 0.05)));
+    let white = Lambertian::new(SolidColor::new(Color::new(0.73, 0.73, 0.73)));
+    let green = Lambertian::new(SolidColor::new(Color::new(0.12, 0.45, 0.15)));
+    let light = DiffuseLight::new(SolidColor::new(Color::new(15.0, 15.0, 15.0)));
+
+    objects.add(Box::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
+    objects.add(Box::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
+    objects.add(Box::new(XZRect::new(
+        213.0, 343.0, 227.0, 332.0, 554.0, light,
+    )));
+    objects.add(Box::new(XZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, white)));
+    objects.add(Box::new(XZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+    objects.add(Box::new(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+
     objects
 }

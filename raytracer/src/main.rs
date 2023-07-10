@@ -44,14 +44,14 @@ fn ray_color(ray: Ray, background: &Color, world: &Arc<HittableList>, depth: i32
 
 fn main() {
     // 图像
-    let aspect_ratio = 16.0 / 9.0;
-    let width = 400;
+    let aspect_ratio = 1.0;
+    let width = 600;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 200;
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image16.jpg");
+    let path = std::path::Path::new("output/book2/image18.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -118,7 +118,7 @@ fn main() {
             vfov = 20.0;
             aperture = 0.0;
         }
-        _ => {
+        5 => {
             world = HittableList {
                 objects: vec![BVHNode::create(generator::simple_light(), 0.0, 1.0)],
             };
@@ -126,6 +126,16 @@ fn main() {
             lookfrom = Vec3::new(26.0, 3.0, 6.0);
             lookat = Vec3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
+            aperture = 0.0;
+        }
+        _ => {
+            world = HittableList {
+                objects: vec![BVHNode::create(generator::cornell_box(), 0.0, 1.0)],
+            };
+            background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Vec3::new(278.0, 278.0, -800.0);
+            lookat = Vec3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
             aperture = 0.0;
         }
     };

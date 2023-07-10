@@ -11,6 +11,7 @@ pub trait Texture: Send + Sync {
 }
 
 // 纯色
+#[derive(Clone, Copy)]
 pub struct SolidColor {
     pub color_value: Color,
 }
@@ -28,7 +29,7 @@ impl Texture for SolidColor {
 }
 
 // 棋盘格
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct CheckerTexture<T1: Texture, T2: Texture> {
     pub odd: T1,
     pub even: T2,

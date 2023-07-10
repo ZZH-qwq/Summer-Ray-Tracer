@@ -12,6 +12,7 @@ pub trait Material: Send + Sync {
 }
 
 // 漫反射
+#[derive(Copy)]
 pub struct Lambertian<T: Texture> {
     pub albedo: T,
 }
@@ -37,6 +38,14 @@ impl<T: Texture> Material for Lambertian<T> {
 
     fn emitted(&self, _: f64, _: f64, _: Vec3) -> Color {
         Color::zero()
+    }
+}
+
+impl<T: Texture + Copy> Clone for Lambertian<T> {
+    fn clone(&self) -> Self {
+        Self {
+            albedo: self.albedo,
+        }
     }
 }
 
