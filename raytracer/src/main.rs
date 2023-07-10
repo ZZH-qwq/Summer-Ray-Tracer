@@ -31,7 +31,6 @@ use crate::bvh_node::BVHNode;
 
 // 接受一个光线做为参数 然后计算这条光线所产生的颜色
 fn ray_color(ray: Ray, world: &Arc<HittableList>, depth: i32) -> Color {
-    // 加入了漫反射材质
     // 限制递归层数
     if depth <= 0 {
         return Color::zero();
@@ -166,7 +165,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image10.jpg");
+    let path = std::path::Path::new("output/book2/image11.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
