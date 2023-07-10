@@ -12,15 +12,11 @@ use hittable::*;
 use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::{ProgressBar, ProgressStyle};
-use material::*;
-use moving_sphere::MovingSphere;
 use rand::Rng;
 use ray::Ray;
-use sphere::Sphere;
 use std::sync::Arc;
 use std::thread;
 use std::{fs::File, process::exit};
-use texture::*;
 use vec3::{Color, Vec3};
 
 use crate::bvh_node::BVHNode;
@@ -44,144 +40,6 @@ fn ray_color(ray: Ray, background: &Color, world: &Arc<HittableList>, depth: i32
     }
     // 不相交 则返回背景颜色
     *background
-}
-
-// 生成随机场景
-fn random_scene() -> HittableList {
-    let mut rng = rand::thread_rng();
-    let mut world = HittableList::new();
-
-    let ground_material = Lambertian::new(CheckerTexture::new(
-        SolidColor::new(Color::new(0.2, 0.3, 0.1)),
-        SolidColor::new(Color::new(0.9, 0.9, 0.9)),
-    ));
-    world.add(Box::new(Sphere::new(
-        Vec3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        ground_material,
-    )));
-
-    for a in -11..11 {
-        for b in -11..11 {
-            let choose_mat: f64 = rng.gen();
-            let center = Vec3::new(
-                a as f64 + 0.9 * rng.gen::<f64>(),
-                0.2,
-                b as f64 + 0.9 * rng.gen::<f64>(),
-            );
-
-            if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                if choose_mat < 0.8 {
-                    // diffus
-                    let albedo = SolidColor::new(Color::random() * Color::random());
-                    // 添加了运动的球体
-                    let center1 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
-                    world.add(Box::new(MovingSphere::new(
-                        center,
-                        center1,
-                        0.0,
-                        1.0,
-                        0.2,
-                        Lambertian::new(albedo),
-                    )));
-                } else if choose_mat < 0.95 {
-                    // metal
-                    let albedo = 0.5 * Color::one() + 0.5 * Color::random();
-                    let fuzz = rng.gen_range(0.0..0.5);
-                    world.add(Box::new(Sphere::new(center, 0.2, Metal::new(albedo, fuzz))));
-                } else {
-                    // glass
-                    world.add(Box::new(Sphere::new(center, 0.2, Dielectric::new(1.5))));
-                }
-            }
-        }
-    }
-
-    world.add(Box::new(Sphere::new(
-        Vec3::new(0.0, 1.0, 0.0),
-        1.0,
-        Dielectric::new(1.5),
-    )));
-
-    world.add(Box::new(Sphere::new(
-        Vec3::new(-4.0, 1.0, 0.0),
-        1.0,
-        Lambertian::new(SolidColor::new(Vec3::new(0.4, 0.2, 0.1))),
-    )));
-
-    world.add(Box::new(Sphere::new(
-        Vec3::new(4.0, 1.0, 0.0),
-        1.0,
-        Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0),
-    )));
-
-    world
-}
-
-fn two_spheres() -> HittableList {
-    let mut objects = HittableList::new();
-    objects.add(Box::new(Sphere::new(
-        Vec3::new(0.0, -10.0, 0.0),
-        10.0,
-        Lambertian::new(CheckerTexture::new(
-            SolidColor::new(Color::new(0.2, 0.3, 0.1)),
-            SolidColor::new(Color::new(0.9, 0.9, 0.9)),
-        )),
-    )));
-    objects.add(Box::new(Sphere::new(
-        Vec3::new(0.0, 10.0, 0.0),
-        10.0,
-        Lambertian::new(CheckerTexture::new(
-            SolidColor::new(Color::new(0.2, 0.3, 0.1)),
-            SolidColor::new(Color::new(0.9, 0.9, 0.9)),
-        )),
-    )));
-    objects
-}
-
-fn two_perlin_spheres() -> HittableList {
-    let mut objects = HittableList::new();
-    objects.add(Box::new(Sphere::new(
-        Vec3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        Lambertian::new(NoiseTexture::new(4.0)),
-    )));
-    objects.add(Box::new(Sphere::new(
-        Vec3::new(0.0, 2.0, 0.0),
-        2.0,
-        Lambertian::new(NoiseTexture::new(4.0)),
-    )));
-    objects
-}
-
-fn earth() -> HittableList {
-    let mut objects = HittableList::new();
-    objects.add(Box::new(Sphere::new(
-        Vec3::new(0.0, 0.0, 0.0),
-        2.0,
-        Lambertian::new(ImageTexture::new(
-            "raytracer/src/texture/img/earthmap.jpg".to_string(),
-        )),
-    )));
-
-    objects
-}
-
-fn simple_light() -> HittableList {
-    let mut objects = HittableList::new();
-    objects.add(Box::new(Sphere::new(
-        Vec3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        Lambertian::new(NoiseTexture::new(4.0)),
-    )));
-    objects.add(Box::new(Sphere::new(
-        Vec3::new(0.0, 2.0, 0.0),
-        2.0,
-        DiffuseLight::new(ImageTexture::new(
-            "raytracer/src/texture/img/earthmap.jpg".to_string(),
-        )),
-    )));
-    objects
 }
 
 fn main() {
@@ -222,7 +80,7 @@ fn main() {
     match world_type {
         1 => {
             world = HittableList {
-                objects: vec![BVHNode::create(random_scene(), 0.0, 1.0)],
+                objects: vec![BVHNode::create(generator::random_scene(), 0.0, 1.0)],
             };
             background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -232,7 +90,7 @@ fn main() {
         }
         2 => {
             world = HittableList {
-                objects: vec![BVHNode::create(two_spheres(), 0.0, 1.0)],
+                objects: vec![BVHNode::create(generator::two_spheres(), 0.0, 1.0)],
             };
             background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -242,7 +100,7 @@ fn main() {
         }
         3 => {
             world = HittableList {
-                objects: vec![BVHNode::create(two_perlin_spheres(), 0.0, 1.0)],
+                objects: vec![BVHNode::create(generator::two_perlin_spheres(), 0.0, 1.0)],
             };
             background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -252,7 +110,7 @@ fn main() {
         }
         4 => {
             world = HittableList {
-                objects: vec![BVHNode::create(earth(), 0.0, 1.0)],
+                objects: vec![BVHNode::create(generator::earth(), 0.0, 1.0)],
             };
             background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -262,7 +120,7 @@ fn main() {
         }
         _ => {
             world = HittableList {
-                objects: vec![BVHNode::create(simple_light(), 0.0, 1.0)],
+                objects: vec![BVHNode::create(generator::simple_light(), 0.0, 1.0)],
             };
             background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Vec3::new(13.0, 2.0, 3.0);

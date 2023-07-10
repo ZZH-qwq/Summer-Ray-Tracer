@@ -2,6 +2,7 @@
 // 具体物体需要实现 Hittable 的 trait
 // 以计算与光线碰撞的具体位置
 
+pub mod generator;
 pub mod hittable_list;
 pub mod moving_sphere;
 pub mod sphere;
