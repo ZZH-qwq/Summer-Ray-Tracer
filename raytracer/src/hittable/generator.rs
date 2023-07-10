@@ -1,5 +1,6 @@
 // 生成器
 
+use crate::hittable::aarect::XYRect;
 use crate::hittable::hittable_list::HittableList;
 use crate::hittable::moving_sphere::MovingSphere;
 use crate::hittable::sphere::Sphere;
@@ -137,14 +138,17 @@ pub fn simple_light() -> HittableList {
         Lambertian::new(NoiseTexture::new(4.0)),
     )));
     objects.add(Box::new(Sphere::new(
-        Vec3::new(0.0, 1.0, -1.0),
-        1.0,
-        DiffuseLight::new(NoiseTexture::new(4.0)),
+        Vec3::new(0.0, 2.0, 0.0),
+        2.0,
+        Lambertian::new(NoiseTexture::new(4.0)),
     )));
-    objects.add(Box::new(Sphere::new(
-        Vec3::new(4.0, 1.0, 1.0),
+    objects.add(Box::new(XYRect::new(
+        3.0,
+        5.0,
         1.0,
-        Dielectric::new(1.5),
+        3.0,
+        -2.0,
+        DiffuseLight::new(SolidColor::new(Color::new(4.0, 4.0, 4.0))),
     )));
     objects
 }

@@ -123,8 +123,8 @@ fn main() {
                 objects: vec![BVHNode::create(generator::simple_light(), 0.0, 1.0)],
             };
             background = Color::new(0.0, 0.0, 0.0);
-            lookfrom = Vec3::new(13.0, 2.0, 3.0);
-            lookat = Vec3::new(0.0, 0.0, 0.0);
+            lookfrom = Vec3::new(26.0, 3.0, 6.0);
+            lookat = Vec3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
             aperture = 0.0;
         }
