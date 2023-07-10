@@ -2,12 +2,8 @@ mod aabb;
 mod bvh_node;
 mod camera;
 mod hittable;
-mod hittable_list;
 mod material;
-mod moving_sphere;
-mod perlin;
 mod ray;
-mod sphere;
 mod texture;
 mod vec3;
 use camera::Camera;
@@ -30,22 +26,24 @@ use vec3::{Color, Vec3};
 use crate::bvh_node::BVHNode;
 
 // 接受一个光线做为参数 然后计算这条光线所产生的颜色
-fn ray_color(ray: Ray, world: &Arc<HittableList>, depth: i32) -> Color {
+fn ray_color(ray: Ray, background: &Color, world: &Arc<HittableList>, depth: i32) -> Color {
     // 限制递归层数
     if depth <= 0 {
         return Color::zero();
     }
     // 调用不同材质产生不同的反射
     if let Some(hit_record) = world.hit(ray, 0.0001, f64::INFINITY) {
+        let emitted = hit_record
+            .material
+            .emitted(hit_record.u, hit_record.v, hit_record.point);
         if let Some((attenuation, scattered)) = hit_record.material.scatter(&ray, &hit_record) {
-            return attenuation * ray_color(scattered, world, depth - 1);
+            return emitted + attenuation * ray_color(scattered, background, world, depth - 1);
         } else {
-            return Color::zero();
+            return emitted;
         }
     }
-    // 不相交 则根据 y 值线性插值映射至白色 (1.0, 1.0, 1.0) 到蓝色 (0.5, 0.7, 1.0)
-    let t = 0.5 + Vec3::unit_vector(ray.direction).y * 0.5;
-    (1.0 - t) * Color::one() + t * Color::new(0.5, 0.7, 1.0)
+    // 不相交 则返回背景颜色
+    *background
 }
 
 // 生成随机场景
@@ -162,10 +160,27 @@ fn earth() -> HittableList {
         Vec3::new(0.0, 0.0, 0.0),
         2.0,
         Lambertian::new(ImageTexture::new(
-            "raytracer/src/img/earthmap.jpg".to_string(),
+            "raytracer/src/texture/img/earthmap.jpg".to_string(),
         )),
     )));
 
+    objects
+}
+
+fn simple_light() -> HittableList {
+    let mut objects = HittableList::new();
+    objects.add(Box::new(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Lambertian::new(NoiseTexture::new(4.0)),
+    )));
+    objects.add(Box::new(Sphere::new(
+        Vec3::new(0.0, 2.0, 0.0),
+        2.0,
+        DiffuseLight::new(ImageTexture::new(
+            "raytracer/src/texture/img/earthmap.jpg".to_string(),
+        )),
+    )));
     objects
 }
 
@@ -178,7 +193,7 @@ fn main() {
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image15.jpg");
+    let path = std::path::Path::new("output/book2/image16.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -197,35 +212,49 @@ fn main() {
     );
 
     // 世界
-    let world_type = 3;
+    let world_type = 0;
     let lookfrom: Vec3;
     let lookat: Vec3;
     let vfov: f64;
     let aperture: f64;
+    let background: Color;
     let world: HittableList;
     match world_type {
-        0 => {
+        1 => {
             world = HittableList {
                 objects: vec![BVHNode::create(random_scene(), 0.0, 1.0)],
             };
+            background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
             aperture = 0.1;
         }
-        1 => {
+        2 => {
             world = HittableList {
                 objects: vec![BVHNode::create(two_spheres(), 0.0, 1.0)],
             };
+            background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
             aperture = 0.0;
         }
-        2 => {
+        3 => {
             world = HittableList {
                 objects: vec![BVHNode::create(two_perlin_spheres(), 0.0, 1.0)],
             };
+            background = Color::new(0.7, 0.8, 1.0);
+            lookfrom = Vec3::new(13.0, 2.0, 3.0);
+            lookat = Vec3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.0;
+        }
+        4 => {
+            world = HittableList {
+                objects: vec![BVHNode::create(earth(), 0.0, 1.0)],
+            };
+            background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -233,8 +262,9 @@ fn main() {
         }
         _ => {
             world = HittableList {
-                objects: vec![BVHNode::create(earth(), 0.0, 1.0)],
+                objects: vec![BVHNode::create(simple_light(), 0.0, 1.0)],
             };
+            background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -290,7 +320,7 @@ fn main() {
 
                         // 生成光线
                         let ray = thread_cam.get_ray(u, v);
-                        pixel_color += ray_color(ray, &thread_world, cur_max_depth);
+                        pixel_color += ray_color(ray, &background, &thread_world, cur_max_depth);
                     }
                     let rgb = (pixel_color / cur_samples_per_pixel as f64).to_u8();
                     col.push(rgb);

@@ -1,14 +1,16 @@
 // 纹理
 
-use crate::perlin::Perlin;
+pub mod perlin;
 use crate::vec3::{Color, Vec3};
 use image::{GenericImageView, ImageBuffer, Rgb};
+use perlin::Perlin;
 use std::path::Path;
 
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Color;
 }
 
+// 纯色
 pub struct SolidColor {
     pub color_value: Color,
 }
@@ -25,6 +27,7 @@ impl Texture for SolidColor {
     }
 }
 
+// 棋盘格
 #[derive(Clone)]
 pub struct CheckerTexture<T1: Texture, T2: Texture> {
     pub odd: T1,
@@ -48,6 +51,7 @@ impl<T1: Texture, T2: Texture> Texture for CheckerTexture<T1, T2> {
     }
 }
 
+// 噪声
 pub struct NoiseTexture {
     noise: Perlin,
     scale: f64,
@@ -68,6 +72,7 @@ impl Texture for NoiseTexture {
     }
 }
 
+// 贴图
 pub struct ImageTexture {
     data: ImageBuffer<Rgb<u8>, Vec<u8>>,
     width: u32,

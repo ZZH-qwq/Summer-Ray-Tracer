@@ -8,6 +8,7 @@ use rand::Rng;
 
 pub trait Material: Send + Sync {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)>;
+    fn emitted(&self, u: f64, v: f64, p: Vec3) -> Color;
 }
 
 // 漫反射
@@ -23,20 +24,19 @@ impl<T: Texture> Lambertian<T> {
 
 impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> {
-        let direction = hit_record.normal + Vec3::random_unit_vector();
+        let mut direction = hit_record.normal + Vec3::random_unit_vector();
         if direction.near_zero() {
-            Some((
-                self.albedo
-                    .value(hit_record.u, hit_record.v, hit_record.point),
-                Ray::new(hit_record.point, hit_record.normal, ray.time),
-            ))
-        } else {
-            Some((
-                self.albedo
-                    .value(hit_record.u, hit_record.v, hit_record.point),
-                Ray::new(hit_record.point, direction, ray.time),
-            ))
+            direction = hit_record.normal;
         }
+        Some((
+            self.albedo
+                .value(hit_record.u, hit_record.v, hit_record.point),
+            Ray::new(hit_record.point, direction, ray.time),
+        ))
+    }
+
+    fn emitted(&self, _: f64, _: f64, _: Vec3) -> Color {
+        Color::zero()
     }
 }
 
@@ -70,6 +70,10 @@ impl Material for Metal {
         } else {
             None
         }
+    }
+
+    fn emitted(&self, _: f64, _: f64, _: Vec3) -> Color {
+        Color::zero()
     }
 }
 
@@ -120,5 +124,30 @@ impl Material for Dielectric {
                 Ray::new(hit_record.point, refracted, ray.time),
             ))
         }
+    }
+
+    fn emitted(&self, _: f64, _: f64, _: Vec3) -> Color {
+        Color::zero()
+    }
+}
+
+// 光源
+pub struct DiffuseLight<T: Texture> {
+    pub emit: T,
+}
+
+impl<T: Texture> DiffuseLight<T> {
+    pub fn new(emit: T) -> Self {
+        Self { emit }
+    }
+}
+
+impl<T: Texture> Material for DiffuseLight<T> {
+    fn scatter(&self, _: &Ray, _: &HitRecord) -> Option<(Color, Ray)> {
+        None
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: Vec3) -> Color {
+        self.emit.value(u, v, p)
     }
 }
