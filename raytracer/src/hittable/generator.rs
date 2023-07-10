@@ -2,6 +2,7 @@
 
 use crate::hittable::aarect::*;
 use crate::hittable::hittable_list::HittableList;
+use crate::hittable::instance::*;
 use crate::hittable::moving_sphere::MovingSphere;
 use crate::hittable::rectbox::RectBox;
 use crate::hittable::sphere::Sphere;
@@ -171,15 +172,24 @@ pub fn cornell_box() -> HittableList {
     objects.add(Box::new(XZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
     objects.add(Box::new(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
 
-    objects.add(Box::new(RectBox::new(
-        Vec3::new(130.0, 0.0, 65.0),
-        Vec3::new(295.0, 165.0, 230.0),
+    let box1 = RectBox::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165.0, 330.0, 165.0),
         white,
-    )));
-    objects.add(Box::new(RectBox::new(
+    );
+    let box2 = RectBox::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165.0, 165.0, 165.0),
+        white,
+    );
+
+    objects.add(Box::new(Translate::new(
+        Box::new(RotateY::new(Box::new(box1), 15.0)),
         Vec3::new(265.0, 0.0, 295.0),
-        Vec3::new(430.0, 330.0, 460.0),
-        white,
+    )));
+    objects.add(Box::new(Translate::new(
+        Box::new(RotateY::new(Box::new(box2), -18.0)),
+        Vec3::new(130.0, 0.0, 65.0),
     )));
 
     objects

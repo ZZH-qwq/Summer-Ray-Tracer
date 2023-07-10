@@ -5,6 +5,7 @@
 pub mod aarect;
 pub mod generator;
 pub mod hittable_list;
+pub mod instance;
 pub mod moving_sphere;
 pub mod rectbox;
 pub mod sphere;
@@ -34,14 +35,7 @@ impl<'a> HitRecord<'a> {
         material: &'a dyn Material,
         ray: Ray,
     ) -> Self {
-        let front_face = Vec3::dot(ray.direction, outward_normal) < 0.0;
-        let normal = if front_face {
-            // ray is outside the sphere
-            outward_normal
-        } else {
-            // ray is inside the sphere
-            -outward_normal
-        };
+        let (normal, front_face) = HitRecord::set_face_normal(outward_normal, &ray);
         Self {
             point,
             normal,
@@ -50,6 +44,17 @@ impl<'a> HitRecord<'a> {
             u,
             v,
             front_face,
+        }
+    }
+
+    pub fn set_face_normal(outward_normal: Vec3, ray: &Ray) -> (Vec3, bool) {
+        let front_face = Vec3::dot(ray.direction, outward_normal) < 0.0;
+        if front_face {
+            // ray is outside the sphere
+            (outward_normal, true)
+        } else {
+            // ray is inside the sphere
+            (-outward_normal, false)
         }
     }
 }
