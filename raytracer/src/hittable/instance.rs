@@ -19,8 +19,8 @@ impl Translate {
 impl Hittable for Translate {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let moved_r = Ray::new(ray.origin - self.offset, ray.direction, ray.time);
-        if let Some(hit_record) = self.object.hit(moved_r, t_min, t_max) {
-            Some(HitRecord::new(
+        self.object.hit(moved_r, t_min, t_max).map(|hit_record| {
+            HitRecord::new(
                 hit_record.point + self.offset,
                 hit_record.t,
                 hit_record.u,
@@ -28,21 +28,17 @@ impl Hittable for Translate {
                 hit_record.normal,
                 hit_record.material,
                 moved_r,
-            ))
-        } else {
-            None
-        }
+            )
+        })
     }
 
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
-        if let Some(bounding_box) = self.object.bounding_box(time0, time1) {
-            Some(Aabb::new(
+        self.object.bounding_box(time0, time1).map(|bounding_box| {
+            Aabb::new(
                 bounding_box.min + self.offset,
                 bounding_box.max + self.offset,
-            ))
-        } else {
-            None
-        }
+            )
+        })
     }
 }
 
@@ -58,7 +54,7 @@ impl RotateY {
         let radians = theta.to_radians();
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
-        let bbox = if let Some(bbox) = object.bounding_box(0.0, 1.0) {
+        let bbox = object.bounding_box(0.0, 1.0).map(|bbox| {
             let mut min = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
             let mut max = Vec3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
 
@@ -80,10 +76,8 @@ impl RotateY {
                     }
                 }
             }
-            Some(Aabb::new(min, max))
-        } else {
-            None
-        };
+            Aabb::new(min, max)
+        });
         Self {
             object,
             sin_theta,
@@ -106,7 +100,7 @@ impl Hittable for RotateY {
 
         let rotated_r = Ray::new(origin, direction, ray.time);
 
-        if let Some(hit_record) = self.object.hit(rotated_r, t_min, t_max) {
+        self.object.hit(rotated_r, t_min, t_max).map(|hit_record| {
             let mut p = hit_record.point;
             let mut normal = hit_record.normal;
 
@@ -118,7 +112,7 @@ impl Hittable for RotateY {
             normal[2] =
                 -self.sin_theta * hit_record.normal[0] + self.cos_theta * hit_record.normal[2];
 
-            Some(HitRecord::new(
+            HitRecord::new(
                 p,
                 hit_record.t,
                 hit_record.u,
@@ -126,10 +120,8 @@ impl Hittable for RotateY {
                 normal,
                 hit_record.material,
                 rotated_r,
-            ))
-        } else {
-            None
-        }
+            )
+        })
     }
 
     fn bounding_box(&self, _: f64, _: f64) -> Option<Aabb> {
