@@ -3,6 +3,7 @@
 use crate::hittable::aarect::*;
 use crate::hittable::hittable_list::HittableList;
 use crate::hittable::moving_sphere::MovingSphere;
+use crate::hittable::rectbox::RectBox;
 use crate::hittable::sphere::Sphere;
 use crate::material::*;
 use crate::texture::*;
@@ -169,6 +170,17 @@ pub fn cornell_box() -> HittableList {
     objects.add(Box::new(XZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, white)));
     objects.add(Box::new(XZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
     objects.add(Box::new(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+
+    objects.add(Box::new(RectBox::new(
+        Vec3::new(130.0, 0.0, 65.0),
+        Vec3::new(295.0, 165.0, 230.0),
+        white,
+    )));
+    objects.add(Box::new(RectBox::new(
+        Vec3::new(265.0, 0.0, 295.0),
+        Vec3::new(430.0, 330.0, 460.0),
+        white,
+    )));
 
     objects
 }

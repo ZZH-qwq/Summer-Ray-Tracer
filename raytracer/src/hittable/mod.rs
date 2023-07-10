@@ -6,6 +6,7 @@ pub mod aarect;
 pub mod generator;
 pub mod hittable_list;
 pub mod moving_sphere;
+pub mod rectbox;
 pub mod sphere;
 use crate::aabb::Aabb;
 use crate::material::Material;

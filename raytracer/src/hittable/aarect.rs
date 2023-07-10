@@ -1,4 +1,4 @@
-// 球体类
+// 轴对齐的平面矩形类
 
 use crate::aabb::Aabb;
 use crate::hittable::*;
