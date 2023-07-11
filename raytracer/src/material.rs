@@ -87,6 +87,7 @@ impl Material for Metal {
 }
 
 // 折射
+#[derive(Copy, Clone)]
 pub struct Dielectric {
     pub ir: f64,
 }
@@ -141,6 +142,7 @@ impl Material for Dielectric {
 }
 
 // 光源
+#[derive(Copy, Clone)]
 pub struct DiffuseLight<T: Texture> {
     pub emit: T,
 }

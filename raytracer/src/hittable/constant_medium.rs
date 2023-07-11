@@ -22,14 +22,12 @@ impl<M: Material> ConstantMedium<M> {
 
 impl<M: Material> Hittable for ConstantMedium<M> {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let mut rec1: HitRecord;
-        match self.boundary.hit(ray, f64::NEG_INFINITY, f64::INFINITY) {
-            Some(hit_record) => rec1 = hit_record,
+        let mut rec1 = match self.boundary.hit(ray, f64::NEG_INFINITY, f64::INFINITY) {
+            Some(hit_record) => hit_record,
             None => return None,
         };
-        let mut rec2: HitRecord;
-        match self.boundary.hit(ray, rec1.t + 0.0001, f64::INFINITY) {
-            Some(hit_record) => rec2 = hit_record,
+        let mut rec2 = match self.boundary.hit(ray, rec1.t + 0.0001, f64::INFINITY) {
+            Some(hit_record) => hit_record,
             None => return None,
         };
         if rec1.t < t_min {

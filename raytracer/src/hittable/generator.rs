@@ -1,5 +1,6 @@
 // 生成器
 
+// use crate::bvh_node::BVHNode;
 use crate::hittable::aarect::*;
 use crate::hittable::constant_medium::ConstantMedium;
 use crate::hittable::hittable_list::HittableList;
