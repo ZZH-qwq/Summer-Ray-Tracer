@@ -105,6 +105,7 @@ pub fn two_spheres() -> HittableList {
     objects
 }
 
+// 柏林噪声
 pub fn two_perlin_spheres() -> HittableList {
     let mut objects = HittableList::new();
     objects.add(Box::new(Sphere::new(
@@ -120,6 +121,7 @@ pub fn two_perlin_spheres() -> HittableList {
     objects
 }
 
+// 地球贴图
 pub fn earth() -> HittableList {
     let mut objects = HittableList::new();
     objects.add(Box::new(Sphere::new(
@@ -133,6 +135,7 @@ pub fn earth() -> HittableList {
     objects
 }
 
+// 发光材质
 pub fn simple_light() -> HittableList {
     let mut objects = HittableList::new();
     objects.add(Box::new(Sphere::new(
@@ -156,6 +159,7 @@ pub fn simple_light() -> HittableList {
     objects
 }
 
+// 康奈尔盒子
 pub fn cornell_box() -> HittableList {
     let mut objects = HittableList::new();
 
@@ -196,6 +200,7 @@ pub fn cornell_box() -> HittableList {
     objects
 }
 
+// 带有烟块的康奈尔盒子
 pub fn cornell_smoke() -> HittableList {
     let mut objects = HittableList::new();
 
