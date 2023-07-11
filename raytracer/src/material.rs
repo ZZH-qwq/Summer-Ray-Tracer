@@ -160,3 +160,37 @@ impl<T: Texture> Material for DiffuseLight<T> {
         self.emit.value(u, v, p)
     }
 }
+
+// 各向同性散射
+#[derive(Copy)]
+pub struct Isotropic<T: Texture> {
+    pub albedo: T,
+}
+
+impl<T: Texture> Isotropic<T> {
+    pub fn new(albedo: T) -> Self {
+        Self { albedo }
+    }
+}
+
+impl<T: Texture> Material for Isotropic<T> {
+    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> {
+        Some((
+            self.albedo
+                .value(hit_record.u, hit_record.v, hit_record.point),
+            Ray::new(hit_record.point, Vec3::random_in_unit_sphere(), ray.time),
+        ))
+    }
+
+    fn emitted(&self, _: f64, _: f64, _: Vec3) -> Color {
+        Color::zero()
+    }
+}
+
+impl<T: Texture + Copy> Clone for Isotropic<T> {
+    fn clone(&self) -> Self {
+        Self {
+            albedo: self.albedo,
+        }
+    }
+}
