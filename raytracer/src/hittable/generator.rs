@@ -1,6 +1,7 @@
 // 生成器
 
 use crate::hittable::aarect::*;
+use crate::hittable::constant_medium::ConstantMedium;
 use crate::hittable::hittable_list::HittableList;
 use crate::hittable::instance::*;
 use crate::hittable::moving_sphere::MovingSphere;
@@ -189,6 +190,60 @@ pub fn cornell_box() -> HittableList {
     )));
     objects.add(Box::new(Translate::new(
         Box::new(RotateY::new(Box::new(box2), -18.0)),
+        Vec3::new(130.0, 0.0, 65.0),
+    )));
+
+    objects
+}
+
+pub fn cornell_smoke() -> HittableList {
+    let mut objects = HittableList::new();
+
+    let red = Lambertian::new(SolidColor::new(Color::new(0.65, 0.05, 0.05)));
+    let white = Lambertian::new(SolidColor::new(Color::new(0.73, 0.73, 0.73)));
+    let green = Lambertian::new(SolidColor::new(Color::new(0.12, 0.45, 0.15)));
+    let light = DiffuseLight::new(SolidColor::new(Color::new(7.0, 7.0, 7.0)));
+
+    objects.add(Box::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
+    objects.add(Box::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
+    objects.add(Box::new(XZRect::new(
+        113.0, 443.0, 127.0, 432.0, 554.0, light,
+    )));
+    objects.add(Box::new(XZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, white)));
+    objects.add(Box::new(XZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+    objects.add(Box::new(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+
+    let box1 = RectBox::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165.0, 330.0, 165.0),
+        white,
+    );
+    let box2 = RectBox::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165.0, 165.0, 165.0),
+        white,
+    );
+
+    objects.add(Box::new(Translate::new(
+        Box::new(RotateY::new(
+            Box::new(ConstantMedium::new(
+                Box::new(box1),
+                0.01,
+                Isotropic::new(SolidColor::new(Color::zero())),
+            )),
+            15.0,
+        )),
+        Vec3::new(265.0, 0.0, 295.0),
+    )));
+    objects.add(Box::new(Translate::new(
+        Box::new(RotateY::new(
+            Box::new(ConstantMedium::new(
+                Box::new(box2),
+                0.01,
+                Isotropic::new(SolidColor::new(Color::one())),
+            )),
+            -18.0,
+        )),
         Vec3::new(130.0, 0.0, 65.0),
     )));
 

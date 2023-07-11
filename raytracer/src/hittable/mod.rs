@@ -3,6 +3,7 @@
 // 以计算与光线碰撞的具体位置
 
 pub mod aarect;
+pub mod constant_medium;
 pub mod generator;
 pub mod hittable_list;
 pub mod instance;
