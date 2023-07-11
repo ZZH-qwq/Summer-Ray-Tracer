@@ -256,7 +256,7 @@ pub fn cornell_smoke() -> HittableList {
     objects
 }
 
-//
+// 包含所有特性的复杂场景
 pub fn final_scene() -> HittableList {
     let mut boxes1 = HittableList::new();
     let ground = Lambertian::new(SolidColor::new(Color::new(0.48, 0.83, 0.53)));
@@ -275,7 +275,7 @@ pub fn final_scene() -> HittableList {
             boxes1.add(Box::new(RectBox::new(
                 Vec3::new(x0, y0, z0),
                 Vec3::new(x1, y1, z1),
-                ground.clone(),
+                ground,
             )))
         }
     }
@@ -312,7 +312,7 @@ pub fn final_scene() -> HittableList {
     )));
 
     let boundary = Sphere::new(Vec3::new(360.0, 150.0, 145.0), 70.0, Dielectric::new(1.5));
-    objects.add(Box::new(boundary.clone()));
+    objects.add(Box::new(boundary));
     objects.add(Box::new(ConstantMedium::new(
         Box::new(boundary),
         0.2,
@@ -341,11 +341,7 @@ pub fn final_scene() -> HittableList {
     let white = Lambertian::new(SolidColor::new(Color::new(0.73, 0.73, 0.73)));
     let ns = 1000;
     for _ in 0..ns {
-        boxes2.add(Box::new(Sphere::new(
-            Vec3::random() * 165.0,
-            10.0,
-            white.clone(),
-        )))
+        boxes2.add(Box::new(Sphere::new(Vec3::random() * 165.0, 10.0, white)))
     }
 
     objects.add(Box::new(Translate::new(

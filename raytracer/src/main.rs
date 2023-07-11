@@ -47,7 +47,7 @@ fn main() {
     let aspect_ratio = 1.0;
     let width = 200;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 200;
+    let samples_per_pixel = 1000;
     let max_depth = 50;
 
     // 生成

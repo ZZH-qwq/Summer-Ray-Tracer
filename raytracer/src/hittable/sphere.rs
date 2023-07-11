@@ -34,37 +34,38 @@ impl<M: Material> Hittable for Sphere<M> {
         // 按情况返回值
         if discriminant < 0.0 {
             // 无实根
-            return None;
-        }
-        // 优先返回较小的根
-        let sqrtd = discriminant.sqrt();
-        let mut root = (-half_b - sqrtd) / a;
-        let mut p = ray.at(root);
-        if root < t_min || root > t_max {
-            // 若不在范围内再对较大的根进行比较
-            let root2 = (-half_b + sqrtd) / a;
-            if root2 < t_min || root2 > t_max {
-                // 两个根均不在范围内
-                return None;
-            } else {
-                // 较大的根
-                root = root2;
-                p = ray.at(root2);
+            None
+        } else {
+            // 优先返回较小的根
+            let sqrtd = discriminant.sqrt();
+            let mut root = (-half_b - sqrtd) / a;
+            let mut p = ray.at(root);
+            if root < t_min || root > t_max {
+                // 若不在范围内再对较大的根进行比较
+                let root2 = (-half_b + sqrtd) / a;
+                if root2 < t_min || root2 > t_max {
+                    // 两个根均不在范围内
+                    return None;
+                } else {
+                    // 较大的根
+                    root = root2;
+                    p = ray.at(root2);
+                }
             }
+            let outward_normal = (p - self.center) / self.radius;
+            // 计算命中纹理
+            let theta = outward_normal.y.acos();
+            let phi = (-outward_normal.z / outward_normal.x).atan() + PI;
+            Some(HitRecord::new(
+                p,
+                root,
+                phi / (2.0 * PI),
+                theta / PI,
+                outward_normal,
+                &self.material,
+                ray,
+            ))
         }
-        let outward_normal = (p - self.center) / self.radius;
-        // 计算命中纹理
-        let theta = outward_normal.y.acos();
-        let phi = (-outward_normal.z / outward_normal.x).atan() + PI;
-        Some(HitRecord::new(
-            p,
-            root,
-            phi / (2.0 * PI),
-            theta / PI,
-            outward_normal,
-            &self.material,
-            ray,
-        ))
     }
 
     fn bounding_box(&self, _: f64, _: f64) -> Option<crate::aabb::Aabb> {
