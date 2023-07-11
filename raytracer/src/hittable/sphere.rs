@@ -38,17 +38,18 @@ impl<M: Material> Hittable for Sphere<M> {
         }
         // 优先返回较小的根
         let sqrtd = discriminant.sqrt();
-        let root = (-half_b - sqrtd) / a;
+        let mut root = (-half_b - sqrtd) / a;
         let mut p = ray.at(root);
         if root < t_min || root > t_max {
             // 若不在范围内再对较大的根进行比较
-            let root = (-half_b + sqrtd) / a;
-            if root < t_min || root > t_max {
+            let root2 = (-half_b + sqrtd) / a;
+            if root2 < t_min || root2 > t_max {
                 // 两个根均不在范围内
                 return None;
             } else {
                 // 较大的根
-                p = ray.at(root);
+                root = root2;
+                p = ray.at(root2);
             }
         }
         let outward_normal = (p - self.center) / self.radius;
