@@ -45,13 +45,13 @@ fn ray_color(ray: Ray, background: &Color, world: &Arc<HittableList>, depth: i32
 fn main() {
     // 图像
     let aspect_ratio = 1.0;
-    let width = 600;
+    let width = 200;
     let height = (width as f64 / aspect_ratio) as u32;
     let samples_per_pixel = 200;
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image21.jpg");
+    let path = std::path::Path::new("output/book2/image22.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -138,12 +138,20 @@ fn main() {
             vfov = 40.0;
             aperture = 0.0;
         }
-        _ => {
+        7 => {
             world = HittableList {
                 objects: vec![BVHNode::create(generator::cornell_smoke(), 0.0, 1.0)],
             };
             background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Vec3::new(278.0, 278.0, -800.0);
+            lookat = Vec3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
+            aperture = 0.0;
+        }
+        _ => {
+            world = generator::final_scene();
+            background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Vec3::new(478.0, 278.0, -600.0);
             lookat = Vec3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
             aperture = 0.0;

@@ -44,7 +44,7 @@ impl<M: Material> Hittable for ConstantMedium<M> {
         }
         let ray_length = ray.direction.length();
         let distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
-        let hit_distance = self.neg_inv_density * rand::thread_rng().gen::<f64>().log2();
+        let hit_distance = self.neg_inv_density * rand::thread_rng().gen::<f64>().ln();
         if hit_distance > distance_inside_boundary {
             return None;
         }
