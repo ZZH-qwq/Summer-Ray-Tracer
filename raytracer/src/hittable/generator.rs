@@ -8,6 +8,7 @@ use crate::hittable::instance::*;
 use crate::hittable::moving_sphere::MovingSphere;
 use crate::hittable::rectbox::RectBox;
 use crate::hittable::sphere::Sphere;
+use crate::hittable::triangle::Triangle;
 use crate::material::*;
 use crate::texture::*;
 use crate::vec3::{Color, Vec3};
@@ -58,7 +59,11 @@ pub fn random_scene() -> HittableList {
                     world.add(Box::new(Sphere::new(center, 0.2, Metal::new(albedo, fuzz))));
                 } else {
                     // glass
-                    world.add(Box::new(Sphere::new(center, 0.2, Dielectric::new(1.5))));
+                    world.add(Box::new(Sphere::new(
+                        center,
+                        0.2,
+                        Dielectric::new(1.5, 0.0),
+                    )));
                 }
             }
         }
@@ -67,7 +72,7 @@ pub fn random_scene() -> HittableList {
     world.add(Box::new(Sphere::new(
         Vec3::new(0.0, 1.0, 0.0),
         1.0,
-        Dielectric::new(1.5),
+        Dielectric::new(1.5, 0.05),
     )));
 
     world.add(Box::new(Sphere::new(
@@ -303,7 +308,7 @@ pub fn final_scene() -> HittableList {
     objects.add(Box::new(Sphere::new(
         Vec3::new(260.0, 150.0, 45.0),
         50.0,
-        Dielectric::new(1.5),
+        Dielectric::new(1.5, 0.0),
     )));
     objects.add(Box::new(Sphere::new(
         Vec3::new(0.0, 150.0, 145.0),
@@ -311,7 +316,11 @@ pub fn final_scene() -> HittableList {
         Metal::new(Color::new(0.8, 0.8, 0.9), 1.0),
     )));
 
-    let boundary = Sphere::new(Vec3::new(360.0, 150.0, 145.0), 70.0, Dielectric::new(1.5));
+    let boundary = Sphere::new(
+        Vec3::new(360.0, 150.0, 145.0),
+        70.0,
+        Dielectric::new(1.5, 0.0),
+    );
     objects.add(Box::new(boundary));
     objects.add(Box::new(ConstantMedium::new(
         Box::new(boundary),
@@ -319,7 +328,7 @@ pub fn final_scene() -> HittableList {
         Isotropic::new(SolidColor::new(Color::new(0.2, 0.4, 0.9))),
     )));
     objects.add(Box::new(ConstantMedium::new(
-        Box::new(Sphere::new(Vec3::zero(), 5000.0, Dielectric::new(1.5))),
+        Box::new(Sphere::new(Vec3::zero(), 5000.0, Dielectric::new(1.5, 0.0))),
         0.0001,
         Isotropic::new(SolidColor::new(Color::one())),
     )));
@@ -347,6 +356,55 @@ pub fn final_scene() -> HittableList {
     objects.add(Box::new(Translate::new(
         Box::new(RotateY::new(BVHNode::create(boxes2, 0.0, 1.0), 10.0)),
         Vec3::new(-100.0, 270.0, 395.0),
+    )));
+
+    objects
+}
+
+// 三角形 以及测试贴图
+pub fn triangles() -> HittableList {
+    let mut objects = HittableList::new();
+
+    let ground_material = Lambertian::new(CheckerTexture::new(
+        SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+        SolidColor::new(Color::new(0.9, 0.9, 0.9)),
+    ));
+    objects.add(Box::new(Sphere::new(
+        Vec3::new(0.0, 0.0, -1000.0),
+        1000.0,
+        ground_material,
+    )));
+
+    // let tri_material = Lambertian::new(CheckerTexture::new(
+    //     SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+    //     SolidColor::new(Color::new(0.9, 0.9, 0.9)),
+    // ));
+    objects.add(Box::new(Triangle::new(
+        Vec3::new(0.0, 0.0, 1.0),
+        Vec3::new(1.0, 0.0, 1.0),
+        Vec3::new(0.0, 1.0, 1.0),
+        Lambertian::new(ImageTexture::new(
+            "raytracer/src/texture/img/uvtest.jpg".to_string(),
+        )),
+        // tri_material,
+    )));
+    objects.add(Box::new(Triangle::new(
+        Vec3::new(0.0, 0.0, 1.0),
+        Vec3::new(-1.0, -1.0, 1.0),
+        Vec3::new(0.0, -1.0, 1.0),
+        Lambertian::new(ImageTexture::new(
+            "raytracer/src/texture/img/uvtest.jpg".to_string(),
+        )),
+        // tri_material,
+    )));
+    objects.add(Box::new(Triangle::new(
+        Vec3::new(0.0, 0.0, 1.0),
+        Vec3::new(-1.0, 1.0, 0.0),
+        Vec3::new(1.0, 1.0, 1.5),
+        Lambertian::new(ImageTexture::new(
+            "raytracer/src/texture/img/uvtest.jpg".to_string(),
+        )),
+        // tri_material,
     )));
 
     objects

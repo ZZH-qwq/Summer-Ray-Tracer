@@ -55,7 +55,7 @@ impl<M: Material> Hittable for Sphere<M> {
             let outward_normal = (p - self.center) / self.radius;
             // 计算命中纹理
             let theta = outward_normal.y.acos();
-            let phi = (-outward_normal.z / outward_normal.x).atan() + PI;
+            let phi = (-outward_normal.z).atan2(outward_normal.x) + PI;
             Some(HitRecord::new(
                 p,
                 root,

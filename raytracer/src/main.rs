@@ -45,13 +45,13 @@ fn ray_color(ray: Ray, background: &Color, world: &Arc<HittableList>, depth: i32
 fn main() {
     // 图像
     let aspect_ratio = 1.0;
-    let width = 200;
+    let width = 400;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 1000;
+    let samples_per_pixel = 10;
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/book2/image22.jpg");
+    let path = std::path::Path::new("output/objtest/image1.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -148,12 +148,21 @@ fn main() {
             vfov = 40.0;
             aperture = 0.0;
         }
-        _ => {
+        8 => {
             world = generator::final_scene();
             background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Vec3::new(478.0, 278.0, -600.0);
             lookat = Vec3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
+            aperture = 0.0;
+        }
+        _ => {
+            world = generator::triangles();
+            background = Color::new(0.7, 0.8, 1.0);
+            // background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Vec3::new(0.0, 0.0, 10.0);
+            lookat = Vec3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
             aperture = 0.0;
         }
     };

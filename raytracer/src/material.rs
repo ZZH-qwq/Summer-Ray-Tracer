@@ -90,11 +90,12 @@ impl Material for Metal {
 #[derive(Copy, Clone)]
 pub struct Dielectric {
     pub ir: f64,
+    pub fuzz: f64,
 }
 
 impl Dielectric {
-    pub fn new(ir: f64) -> Self {
-        Self { ir }
+    pub fn new(ir: f64, fuzz: f64) -> Self {
+        Self { ir, fuzz }
     }
 
     // 非全反射时 折射存在概率
@@ -131,7 +132,11 @@ impl Material for Dielectric {
             let refracted = Vec3::refract(unit_direction, hit_record.normal, refraction_ratio);
             Some((
                 Color::new(1.0, 1.0, 1.0),
-                Ray::new(hit_record.point, refracted, ray.time),
+                Ray::new(
+                    hit_record.point,
+                    refracted + Vec3::random_in_unit_sphere() * self.fuzz,
+                    ray.time,
+                ),
             ))
         }
     }

@@ -10,6 +10,7 @@ pub mod instance;
 pub mod moving_sphere;
 pub mod rectbox;
 pub mod sphere;
+pub mod triangle;
 use crate::aabb::Aabb;
 use crate::material::Material;
 use crate::ray::Ray;
