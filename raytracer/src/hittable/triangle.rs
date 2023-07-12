@@ -52,9 +52,10 @@ impl<M: Material> Hittable for Triangle<M> {
             let p = oa + t * ray.direction;
             let u = Vec3::dot(self.pc, p);
             let v = Vec3::dot(self.pb, p);
-            if u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0 || u + v < 0.0 || u + v > 1.0 {
-                None
-            } else {
+            if (0.0..=1.0).contains(&(u + v))
+                && (0.0..=1.0).contains(&u)
+                && (0.0..=1.0).contains(&v)
+            {
                 Some(HitRecord::new(
                     ray.at(t),
                     t,
@@ -64,6 +65,8 @@ impl<M: Material> Hittable for Triangle<M> {
                     &self.material,
                     ray,
                 ))
+            } else {
+                None
             }
         }
     }

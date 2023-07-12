@@ -7,15 +7,15 @@ use crate::hittable::*;
 use crate::material::Material;
 use crate::vec3::Vec3;
 use std::string::String;
-use tobj;
+use tobj::{load_obj, LoadOptions};
 
 pub fn load<M: 'static + Material + Clone + Copy>(
     file_name: String,
     material: M,
 ) -> Vec<Box<dyn Hittable>> {
-    let obj = tobj::load_obj(
+    let obj = load_obj(
         file_name,
-        &tobj::LoadOptions {
+        &LoadOptions {
             single_index: false,
             triangulate: true,
             ignore_points: true,
