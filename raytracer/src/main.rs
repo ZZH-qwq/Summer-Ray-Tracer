@@ -7,6 +7,8 @@ mod obj_file;
 mod ray;
 mod texture;
 mod vec3;
+use crate::bvh_node::BVHNode;
+use crate::texture::*;
 use camera::Camera;
 use console::style;
 use hittable::*;
@@ -18,12 +20,16 @@ use ray::Ray;
 use std::sync::Arc;
 use std::thread;
 use std::{fs::File, process::exit};
+use texture::Texture;
 use vec3::{Color, Vec3};
 
-use crate::bvh_node::BVHNode;
-
 // 接受一个光线做为参数 然后计算这条光线所产生的颜色
-fn ray_color(ray: Ray, background: &Color, world: &Arc<HittableList>, depth: i32) -> Color {
+fn ray_color(
+    ray: Ray,
+    background: &Arc<dyn Texture>,
+    world: &Arc<HittableList>,
+    depth: i32,
+) -> Color {
     // 限制递归层数
     if depth <= 0 {
         return Color::zero();
@@ -40,19 +46,30 @@ fn ray_color(ray: Ray, background: &Color, world: &Arc<HittableList>, depth: i32
         }
     }
     // 不相交 则返回背景颜色
-    *background
+    let unit_dir = Vec3::unit_vector(ray.direction);
+    let theta = unit_dir.y.acos();
+    let phi = (-unit_dir.z).atan2(unit_dir.x) + std::f64::consts::PI;
+    let c = background.value(
+        phi / (2.0 * std::f64::consts::PI),
+        theta / std::f64::consts::PI,
+        ray.origin,
+    );
+    // if c.length() > 1.7 {
+    //     println!("{},{},{}", c.x, c.y, c.z);
+    // }
+    c
 }
 
 fn main() {
     // 图像
-    let aspect_ratio = 1.0;
-    let width = 400;
+    let aspect_ratio = 3.0 / 2.0;
+    let width = 1200;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 50;
+    let samples_per_pixel = 5000;
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/objtest/image1.jpg");
+    let path = std::path::Path::new("output/objtest/image2.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -71,19 +88,23 @@ fn main() {
     );
 
     // 世界
-    let world_type = 0;
+    let world_type = 1;
     let lookfrom: Vec3;
     let lookat: Vec3;
     let vfov: f64;
     let aperture: f64;
-    let background: Color;
+    let background: Arc<dyn Texture>;
     let world: HittableList;
     match world_type {
         1 => {
             world = HittableList {
                 objects: vec![BVHNode::create(generator::random_scene(), 0.0, 1.0)],
             };
-            background = Color::new(0.7, 0.8, 1.0);
+            // background = Arc::new(SolidColor::new(Color::new(0.7, 0.8, 1.0)));
+            background = Arc::new(HdrImageTexture::new(
+                "raytracer/src/texture/img/Path_Env.hdr".to_string(),
+                0.7,
+            ));
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -93,7 +114,7 @@ fn main() {
             world = HittableList {
                 objects: vec![BVHNode::create(generator::two_spheres(), 0.0, 1.0)],
             };
-            background = Color::new(0.7, 0.8, 1.0);
+            background = Arc::new(SolidColor::new(Color::new(0.7, 0.8, 1.0)));
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -103,7 +124,7 @@ fn main() {
             world = HittableList {
                 objects: vec![BVHNode::create(generator::two_perlin_spheres(), 0.0, 1.0)],
             };
-            background = Color::new(0.7, 0.8, 1.0);
+            background = Arc::new(SolidColor::new(Color::new(0.7, 0.8, 1.0)));
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -113,7 +134,7 @@ fn main() {
             world = HittableList {
                 objects: vec![BVHNode::create(generator::earth(), 0.0, 1.0)],
             };
-            background = Color::new(0.7, 0.8, 1.0);
+            background = Arc::new(SolidColor::new(Color::new(0.7, 0.8, 1.0)));
             lookfrom = Vec3::new(13.0, 2.0, 3.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -123,7 +144,7 @@ fn main() {
             world = HittableList {
                 objects: vec![BVHNode::create(generator::simple_light(), 0.0, 1.0)],
             };
-            background = Color::new(0.0, 0.0, 0.0);
+            background = Arc::new(SolidColor::new(Color::new(0.0, 0.0, 0.0)));
             lookfrom = Vec3::new(26.0, 3.0, 6.0);
             lookat = Vec3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
@@ -133,7 +154,7 @@ fn main() {
             world = HittableList {
                 objects: vec![BVHNode::create(generator::cornell_box(), 0.0, 1.0)],
             };
-            background = Color::new(0.0, 0.0, 0.0);
+            background = Arc::new(SolidColor::new(Color::new(0.0, 0.0, 0.0)));
             lookfrom = Vec3::new(278.0, 278.0, -800.0);
             lookat = Vec3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
@@ -143,7 +164,7 @@ fn main() {
             world = HittableList {
                 objects: vec![BVHNode::create(generator::cornell_smoke(), 0.0, 1.0)],
             };
-            background = Color::new(0.0, 0.0, 0.0);
+            background = Arc::new(SolidColor::new(Color::new(0.0, 0.0, 0.0)));
             lookfrom = Vec3::new(278.0, 278.0, -800.0);
             lookat = Vec3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
@@ -151,7 +172,7 @@ fn main() {
         }
         8 => {
             world = generator::final_scene();
-            background = Color::new(0.0, 0.0, 0.0);
+            background = Arc::new(SolidColor::new(Color::new(0.0, 0.0, 0.0)));
             lookfrom = Vec3::new(478.0, 278.0, -600.0);
             lookat = Vec3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
@@ -159,7 +180,7 @@ fn main() {
         }
         9 => {
             world = generator::triangles();
-            background = Color::new(0.7, 0.8, 1.0);
+            background = Arc::new(SolidColor::new(Color::new(0.7, 0.8, 1.0)));
             // background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Vec3::new(0.0, 0.0, 10.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
@@ -168,8 +189,11 @@ fn main() {
         }
         _ => {
             world = generator::obj_cat();
-            background = Color::new(0.7, 0.8, 1.0);
-            // background = Color::new(0.0, 0.0, 0.0);
+            // background = SolidColor::new(Color::new(0.7, 0.8, 1.0));
+            background = Arc::new(HdrImageTexture::new(
+                "raytracer/src/texture/img/City_Night_Lights.hdr".to_string(),
+                1.0,
+            ));
             lookfrom = Vec3::new(1000.0, 500.0, 1000.0);
             lookat = Vec3::new(0.0, 200.0, 0.0);
             vfov = 30.0;
@@ -206,6 +230,7 @@ fn main() {
         let cur_max_depth = max_depth;
         let thread_cam = Arc::clone(&mul_cam);
         let thread_world = Arc::clone(&mul_world);
+        let thread_background = Arc::clone(&background);
         let cur_progress = Arc::clone(&mul_progress);
 
         // 生成新线程
@@ -225,7 +250,8 @@ fn main() {
 
                         // 生成光线
                         let ray = thread_cam.get_ray(u, v);
-                        pixel_color += ray_color(ray, &background, &thread_world, cur_max_depth);
+                        pixel_color +=
+                            ray_color(ray, &thread_background, &thread_world, cur_max_depth);
                     }
                     let rgb = (pixel_color / cur_samples_per_pixel as f64).to_u8();
                     col.push(rgb);

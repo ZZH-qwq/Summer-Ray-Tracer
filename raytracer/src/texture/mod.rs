@@ -4,6 +4,8 @@ pub mod perlin;
 use crate::vec3::{Color, Vec3};
 use image::{GenericImageView, ImageBuffer, Rgb};
 use perlin::Perlin;
+use radiant::RGB;
+use std::io::BufReader;
 use std::path::Path;
 
 pub trait Texture: Send + Sync {
@@ -103,5 +105,37 @@ impl Texture for ImageTexture {
             (rgb[1] as f64) / 255.0,
             (rgb[2] as f64) / 255.0,
         )
+    }
+}
+
+pub struct HdrImageTexture {
+    data: Vec<RGB>,
+    width: u32,
+    height: u32,
+    limit: f64,
+}
+
+impl HdrImageTexture {
+    pub fn new(file_name: String, limit: f64) -> Self {
+        let f = std::fs::File::open(file_name.to_string()).expect("Failed to open specified file");
+        let f = BufReader::new(f);
+        let image = radiant::load(f).expect("Failed to load image data");
+        let data = image.data;
+        assert_eq!(image.width, 512);
+        Self {
+            data,
+            width: image.width as u32,
+            height: image.height as u32,
+            limit,
+        }
+    }
+}
+
+impl Texture for HdrImageTexture {
+    fn value(&self, u: f64, v: f64, _: Vec3) -> Color {
+        let i = ((u * self.width as f64) as u32).clamp(0, self.width - 1);
+        let j = ((v * self.height as f64) as u32).clamp(0, self.height - 1);
+        let rgb = &self.data[(j * self.width + i) as usize];
+        Color::new(rgb.r as f64, rgb.g as f64, rgb.b as f64) * self.limit
     }
 }

@@ -21,7 +21,8 @@ pub fn random_scene() -> HittableList {
     let mut world = HittableList::new();
 
     let ground_material = Lambertian::new(CheckerTexture::new(
-        SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+        // SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+        SolidColor::new(Color::new(0.8, 0.65, 0.45)),
         SolidColor::new(Color::new(0.9, 0.9, 0.9)),
     ));
     world.add(Box::new(Sphere::new(
@@ -40,7 +41,7 @@ pub fn random_scene() -> HittableList {
             );
 
             if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                if choose_mat < 0.8 {
+                if choose_mat < 0.6 {
                     // diffus
                     let albedo = SolidColor::new(Color::random() * Color::random());
                     // 添加了运动的球体
@@ -53,7 +54,8 @@ pub fn random_scene() -> HittableList {
                         0.2,
                         Lambertian::new(albedo),
                     )));
-                } else if choose_mat < 0.95 {
+                    // world.add(Box::new(Sphere::new(center, 0.2, Lambertian::new(albedo))));
+                } else if choose_mat < 0.9 {
                     // metal
                     let albedo = 0.5 * Color::one() + 0.5 * Color::random();
                     let fuzz = rng.gen_range(0.0..0.5);
@@ -73,7 +75,7 @@ pub fn random_scene() -> HittableList {
     world.add(Box::new(Sphere::new(
         Vec3::new(0.0, 1.0, 0.0),
         1.0,
-        Dielectric::new(1.5, 0.05),
+        Dielectric::new(1.5, 0.01),
     )));
 
     world.add(Box::new(Sphere::new(
@@ -418,7 +420,7 @@ pub fn obj_cat() -> HittableList {
         objects: obj_file::load("raytracer/src/obj/cat.obj".to_string(), white),
     };
 
-    let ground_material = Lambertian::new(SolidColor::new(Color::new(0.1, 0.4, 0.7)));
+    let ground_material = Lambertian::new(SolidColor::new(Color::new(0.8, 0.65, 0.45)));
     objects.add(Box::new(Sphere::new(
         Vec3::new(0.0, -9990.0, 0.0),
         10000.0,
