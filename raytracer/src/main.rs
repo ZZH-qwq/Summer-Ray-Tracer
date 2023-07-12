@@ -3,6 +3,7 @@ mod bvh_node;
 mod camera;
 mod hittable;
 mod material;
+mod obj_file;
 mod ray;
 mod texture;
 mod vec3;
@@ -47,7 +48,7 @@ fn main() {
     let aspect_ratio = 1.0;
     let width = 400;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 50;
     let max_depth = 50;
 
     // 生成
@@ -156,13 +157,22 @@ fn main() {
             vfov = 40.0;
             aperture = 0.0;
         }
-        _ => {
+        9 => {
             world = generator::triangles();
             background = Color::new(0.7, 0.8, 1.0);
             // background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Vec3::new(0.0, 0.0, 10.0);
             lookat = Vec3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
+            aperture = 0.0;
+        }
+        _ => {
+            world = generator::obj_cat();
+            background = Color::new(0.7, 0.8, 1.0);
+            // background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Vec3::new(1000.0, 500.0, 1000.0);
+            lookat = Vec3::new(0.0, 200.0, 0.0);
+            vfov = 30.0;
             aperture = 0.0;
         }
     };

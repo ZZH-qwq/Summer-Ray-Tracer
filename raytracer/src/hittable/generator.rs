@@ -10,6 +10,7 @@ use crate::hittable::rectbox::RectBox;
 use crate::hittable::sphere::Sphere;
 use crate::hittable::triangle::Triangle;
 use crate::material::*;
+use crate::obj_file;
 use crate::texture::*;
 use crate::vec3::{Color, Vec3};
 use rand::Rng;
@@ -405,6 +406,23 @@ pub fn triangles() -> HittableList {
             "raytracer/src/texture/img/uvtest.jpg".to_string(),
         )),
         // tri_material,
+    )));
+
+    objects
+}
+
+// obj模型导入
+pub fn obj_cat() -> HittableList {
+    let white = Lambertian::new(SolidColor::new(Color::new(0.73, 0.73, 0.73)));
+    let mut objects = HittableList {
+        objects: obj_file::load("raytracer/src/obj/cat.obj".to_string(), white),
+    };
+
+    let ground_material = Lambertian::new(SolidColor::new(Color::new(0.1, 0.4, 0.7)));
+    objects.add(Box::new(Sphere::new(
+        Vec3::new(0.0, -9990.0, 0.0),
+        10000.0,
+        ground_material,
     )));
 
     objects
