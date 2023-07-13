@@ -61,16 +61,17 @@ fn ray_color(
 fn main() {
     // 图像
     let aspect_ratio = 3.0 / 2.0;
-    let width = 200;
+    let width = 600;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 1;
-    let max_depth = 50;
+    let samples_per_pixel = 30;
+    let max_depth = 25;
 
     // 生成
     let path = std::path::Path::new("output/objtest/image4.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
+    let mut img_pre: RgbImage = ImageBuffer::new(width / 4, height / 4);
     let mut img: RgbImage = ImageBuffer::new(width, height);
     let progress = if option_env!("CI").unwrap_or_default() == "true" {
         ProgressBar::hidden()
@@ -198,18 +199,21 @@ fn main() {
         }
         _ => {
             world = Block::the_world();
-            background = Arc::new(SolidColor::new(Color::new(0.7, 0.8, 1.0)));
+            // background = Arc::new(SolidColor::new(Color::new(0.7, 0.8, 1.0)));
             // background = Color::new(0.0, 0.0, 0.0);
-            lookfrom = Vec3::new(10.0, 10.0, 10.0);
-            lookat = Vec3::new(36.0, 0.0, 36.0);
+            background = Arc::new(ImageTexture::new(
+                "raytracer/src/texture/img/twilight.jpg".to_string(),
+            ));
+            lookfrom = Vec3::new(10.0, 12.0, 10.0);
+            lookat = Vec3::new(36.0, 2.0, 36.0);
             vfov = 45.0;
-            aperture = 0.0;
+            aperture = 0.1;
         }
     };
 
     // 镜头
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
+    let dist_to_focus = 40.0;
     let cam = Camera::new(
         (lookfrom, lookat),
         vup,
@@ -221,12 +225,82 @@ fn main() {
     );
 
     // 线程
-    let thread_count = 6;
+    let thread_count = 7;
     let mul_cam = Arc::new(cam);
     let mul_world = Arc::new(world);
     let mul_progress = Arc::new(progress);
-    let mut handles = vec![];
+    let mut handles_pre = vec![];
 
+    for i in 0..thread_count {
+        let mut curr = i;
+        let step = thread_count;
+        let tot_width = width / 4;
+        let tot_height = height / 4;
+        let cur_samples_per_pixel = (samples_per_pixel / 4).max(1);
+        let cur_max_depth = max_depth / 2;
+        let thread_cam = Arc::clone(&mul_cam);
+        let thread_world = Arc::clone(&mul_world);
+        let thread_background = Arc::clone(&background);
+
+        // 生成新线程
+        let handle_pre = thread::spawn(move || {
+            let mut rng = rand::thread_rng();
+            let mut result = vec![];
+            while curr < tot_width {
+                let mut col = vec![];
+                for j in 0..tot_height {
+                    let mut pixel_color = Vec3::zero();
+                    for _ in 0..cur_samples_per_pixel {
+                        // x,y方向分量 加入了多重采样抗锯齿
+                        let u_rand: f64 = rng.gen();
+                        let v_rand: f64 = rng.gen();
+                        let u: f64 = (curr as f64 + u_rand) / ((tot_width - 1) as f64);
+                        let v: f64 = (j as f64 + v_rand) / ((tot_height - 1) as f64);
+
+                        // 生成光线
+                        let ray = thread_cam.get_ray(u, v);
+                        pixel_color +=
+                            ray_color(ray, &thread_background, &thread_world, cur_max_depth);
+                    }
+                    let rgb = (pixel_color / cur_samples_per_pixel as f64).to_u8();
+                    col.push(rgb);
+                }
+                result.push((curr, col));
+                curr += step;
+            }
+            // 返回结果
+            result
+        });
+        handles_pre.push(handle_pre);
+    }
+
+    // 接收结果并汇总
+    let results_pre: Vec<_> = handles_pre.into_iter().map(|h| h.join().unwrap()).collect();
+    for result in &results_pre {
+        for (col_name, col_rgb) in result {
+            for (i, pix) in col_rgb.iter().enumerate() {
+                let pixel = img_pre.get_pixel_mut(*col_name, height / 4 - 1 - i as u32);
+                *pixel = image::Rgb([pix.0, pix.1, pix.2]);
+            }
+        }
+    }
+
+    println!(
+        "Preview image as \"{}\"",
+        style(path.to_str().unwrap()).yellow()
+    );
+    let output_image_pre = image::DynamicImage::ImageRgb8(img_pre);
+    let mut output_file_pre = File::create(path).unwrap();
+    match output_image_pre.write_to(
+        &mut output_file_pre,
+        image::ImageOutputFormat::Jpeg(quality),
+    ) {
+        Ok(_) => {}
+        Err(_) => println!("{}", style("Outputting image fails.").red()),
+    }
+
+    // 高质量渲染
+    let mut handles = vec![];
     for i in 0..thread_count {
         let mut curr = i;
         let step = thread_count;

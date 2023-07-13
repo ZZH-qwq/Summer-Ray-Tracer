@@ -12,6 +12,7 @@ use tobj::{load_obj, LoadOptions};
 pub fn load<M: 'static + Material + Clone + Copy>(
     file_name: String,
     material: M,
+    scale: f64,
 ) -> Vec<Box<dyn Hittable>> {
     let obj = load_obj(
         file_name,
@@ -33,9 +34,16 @@ pub fn load<M: 'static + Material + Clone + Copy>(
         let positions = &m.mesh.positions;
         let mut faces = HittableList::new();
         let mut points = vec![];
+        if positions.len() < 20 {
+            continue;
+        }
 
         for p in (0..positions.len()).step_by(3) {
-            points.push(Vec3::new(positions[p], positions[p + 1], positions[p + 2]));
+            points.push(Vec3::new(
+                positions[p] * scale,
+                positions[p + 1] * scale,
+                positions[p + 2] * scale,
+            ));
         }
 
         for f in (0..indices.len()).step_by(3) {

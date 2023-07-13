@@ -2,8 +2,12 @@
 
 use crate::bvh_node::BVHNode;
 use crate::hittable::aarect::*;
+use crate::hittable::constant_medium::ConstantMedium;
+use crate::hittable::instance::{RotateY, Translate};
+use crate::hittable::sphere::Sphere;
 use crate::hittable_list::HittableList;
 use crate::material::*;
+use crate::obj_file::load;
 use crate::rectbox::RectBox;
 use crate::texture::*;
 use crate::vec3::{Color, Vec3};
@@ -49,14 +53,17 @@ impl Block {
                 } else if h >= 4.0 {
                     // normal
                     block.id = 1;
-                    block.height = (h - 2.0).floor();
+                    block.height = ((h - 4.0) / (j.max(i) as f64 / i as f64)).floor() + 2.0;
                     let select = rng.gen::<f64>();
-                    if !block.occupied && select > (1.0 - (i.max(j) - j) as f64 / 500.0).max(0.995)
+                    if !block.occupied
+                        && select
+                            > (1.0 - ((i as f64 * 1.25).max(j as f64) - j as f64) / 500.0)
+                                .max(0.995)
                     {
                         // have tree
                         block.decoration = 1;
                         block.occupied = true;
-                    } else if select > 0.8 {
+                    } else if select > 0.9 {
                         // have flower
                         block.decoration = 2;
                     }
@@ -64,7 +71,7 @@ impl Block {
                     // sea
                     block.height = ((-h / 2.0 + 1.0).ln() * -3.0).floor();
                     let select = rng.gen::<f64>();
-                    if !block.occupied && select > (1.02 + h / 50.0).max(0.95) {
+                    if !block.occupied && select > (1.03 + h / 30.0).max(0.92) {
                         // have coral
                         block.decoration = 3;
                         block.occupied = true;
@@ -75,6 +82,89 @@ impl Block {
         map
     }
 
+    pub fn tree(x: f64, y: f64, z: f64, list: &mut HittableList) {
+        let log = Lambertian::new(SolidColor::new(Color::new(0.3, 0.23, 0.14)));
+        let leaf = Lambertian::new(SolidColor::new(Color::new(0.25, 0.35, 0.11)));
+
+        list.add(Box::new(XYRect::new(x, x + 1.0, y, y + 3.0, z, log)));
+        list.add(Box::new(YZRect::new(y, y + 3.0, z, z + 1.0, x, log)));
+
+        list.add(Box::new(XZRect::new(
+            x - 1.0,
+            x + 2.0,
+            z - 1.0,
+            z + 2.0,
+            y + 6.0,
+            leaf,
+        )));
+        list.add(Box::new(XZRect::new(
+            x - 2.0,
+            x + 3.0,
+            z - 1.0,
+            z + 2.0,
+            y + 5.0,
+            leaf,
+        )));
+        list.add(Box::new(XZRect::new(
+            x - 1.0,
+            x + 2.0,
+            z - 2.0,
+            z + 3.0,
+            y + 5.0,
+            leaf,
+        )));
+
+        list.add(Box::new(YZRect::new(
+            y + 3.0,
+            y + 5.0,
+            z - 2.0,
+            z + 3.0,
+            x - 1.0,
+            leaf,
+        )));
+        list.add(Box::new(YZRect::new(
+            y + 4.9,
+            y + 6.0,
+            z - 1.0,
+            z + 2.0,
+            x - 1.0,
+            leaf,
+        )));
+        list.add(Box::new(YZRect::new(
+            y + 3.0,
+            y + 5.0,
+            z - 1.0,
+            z + 2.0,
+            x - 2.0,
+            leaf,
+        )));
+
+        list.add(Box::new(XYRect::new(
+            x - 2.0,
+            x + 3.0,
+            y + 3.0,
+            y + 5.0,
+            z - 1.0,
+            leaf,
+        )));
+        list.add(Box::new(XYRect::new(
+            x - 1.0,
+            x + 2.0,
+            y + 4.9,
+            y + 6.0,
+            z - 1.0,
+            leaf,
+        )));
+        list.add(Box::new(XYRect::new(
+            x - 1.0,
+            x + 2.0,
+            y + 3.0,
+            y + 5.0,
+            z - 2.0,
+            leaf,
+        )));
+    }
+
     pub fn flower(x: f64, y: f64, z: f64, list: &mut HittableList) {
         let c = (Color::random() + Color::one() * 0.5) * 0.66;
         let mat = Lambertian::new(SolidColor::new(c));
@@ -82,27 +172,88 @@ impl Block {
         let offset = rng.gen::<f64>() * 0.5;
         list.add(Box::new(XZRect::new(
             x + offset,
-            x + offset + 0.2,
+            x + offset + 0.3,
             z + offset,
-            z + offset + 0.2,
+            z + offset + 0.3,
             y + rng.gen::<f64>() / 4.0,
             mat,
         )));
         list.add(Box::new(XZRect::new(
-            x + 1.0 - offset - 0.25,
+            x + 1.0 - offset - 0.35,
             x + 1.0 - offset,
             z + offset + 0.25,
-            z + offset + 0.5,
+            z + offset + 0.6,
             y + rng.gen::<f64>() / 5.0 + 0.05,
             mat,
         )));
         list.add(Box::new(XZRect::new(
             x + 1.0 - offset,
-            x + 1.0 - offset + 0.2,
-            z + 1.0 - offset - 0.2,
+            x + 1.0 - offset + 0.3,
+            z + 1.0 - offset - 0.3,
             z + 1.0 - offset,
             y + rng.gen::<f64>() / 3.0,
             mat,
+        )));
+    }
+
+    pub fn coral(x: f64, y: f64, z: f64, list: &mut HittableList) {
+        let c = (Color::random() + Color::one() * 0.5) * 1.0;
+        let mat = DiffuseLight::new(SolidColor::new(c));
+        let mut rng = rand::thread_rng();
+        let offset = rng.gen::<f64>() * 0.8;
+        list.add(Box::new(XZRect::new(
+            x + offset,
+            x + offset + 0.6,
+            z + offset,
+            z + offset + 0.6,
+            y + rng.gen::<f64>() / 4.0,
+            mat,
+        )));
+        list.add(Box::new(XZRect::new(
+            x + 1.0 - offset - 0.55,
+            x + 1.0 - offset,
+            z + offset - 0.25,
+            z + offset + 0.3,
+            y + rng.gen::<f64>() / 5.0 + 0.05,
+            mat,
+        )));
+        list.add(Box::new(XZRect::new(
+            x + 1.0 - offset,
+            x + 1.0 - offset + 0.6,
+            z + 1.0 - offset - 0.6,
+            z + 1.0 - offset,
+            y + rng.gen::<f64>() / 3.0,
+            mat,
+        )));
+        let offset = rng.gen::<f64>() * 0.5;
+        list.add(Box::new(XZRect::new(
+            x + offset,
+            x + offset + 0.3,
+            z + offset,
+            z + offset + 0.3,
+            y + rng.gen::<f64>() / 4.0 + 0.5,
+            mat,
+        )));
+        list.add(Box::new(XZRect::new(
+            x + 1.0 - offset - 0.35,
+            x + 1.0 - offset,
+            z + offset + 0.25,
+            z + offset + 0.6,
+            y + rng.gen::<f64>() / 5.0 + 0.55,
+            mat,
+        )));
+        list.add(Box::new(XZRect::new(
+            x + 1.0 - offset,
+            x + 1.0 - offset + 0.3,
+            z + 1.0 - offset - 0.3,
+            z + 1.0 - offset,
+            y + rng.gen::<f64>() / 3.0 + 0.5,
+            mat,
+        )));
+        list.add(Box::new(RectBox::new(
+            Vec3::new(x + 0.2, y + 0.1, z + 0.2),
+            Vec3::new(x + 0.8, y + 0.7, z + 0.8),
+            ColoredDielectric::new(1.5, 0.2, c),
         )));
     }
 
@@ -113,11 +264,11 @@ impl Block {
         let grass = Lambertian::new(SolidColor::new(Color::new(0.50, 0.72, 0.36)));
         let sand = Lambertian::new(SolidColor::new(Color::new(0.87, 0.84, 0.67)));
 
-        let tree = Lambertian::new(SolidColor::new(Color::zero()));
+        // let tree = Lambertian::new(SolidColor::new(Color::zero()));
         // let flower = Lambertian::new(SolidColor::new(Color::new(1.0, 0.0, 0.0)));
-        let coral = Lambertian::new(SolidColor::new(Color::new(0.0, 0.0, 1.0)));
+        // let coral = Lambertian::new(SolidColor::new(Color::new(0.0, 0.0, 1.0)));
 
-        let boxes_per_side = 150;
+        let boxes_per_side = 250;
         let map = Block::create(boxes_per_side, -6.0);
         // Self::flower(8.0, 14.0, 8.0, &mut boxes1);
         // boxes1.add(Box::new(RectBox::new(
@@ -125,6 +276,7 @@ impl Block {
         //     Vec3::new(9.0, 14.0, 9.0),
         //     mud,
         // )));
+
         for (i, it) in map.into_iter().enumerate() {
             for (j, block) in it.into_iter().enumerate() {
                 if (0.3..3.5).contains(&(j as f32 / i as f32)) && (j as i32 + i as i32) > 40 {
@@ -136,27 +288,46 @@ impl Block {
                     let z1 = z0 + w;
                     let y1 = block.height;
 
+                    let block_mat = match block.id {
+                        1 => mud,
+                        2 => sand,
+                        _ => sand,
+                    };
+                    boxes1.add(Box::new(XZRect::new(x0, x1, z0, z1, y1, block_mat)));
+                    boxes1.add(Box::new(YZRect::new(y0 - 0.1, y1, z0, z1, x0, block_mat)));
+                    boxes1.add(Box::new(XYRect::new(x0, x1, y0 - 0.1, y1, z0, block_mat)));
+
                     match block.id {
                         1 => {
-                            boxes1.add(Box::new(RectBox::new(
-                                Vec3::new(x0, y0, z0),
-                                Vec3::new(x1, y1, z1),
-                                mud,
-                            )));
                             if !block.occupied {
-                                boxes1.add(Box::new(RectBox::new(
-                                    Vec3::new(x0 - 0.001, y1 - 0.1, z0 - 0.001),
-                                    Vec3::new(x1 + 0.001, y1 + 0.001, z1 + 0.001),
+                                boxes1.add(Box::new(XZRect::new(
+                                    x0 - 0.001,
+                                    x1 + 0.001,
+                                    z0 - 0.001,
+                                    z1 + 0.001,
+                                    y1 + 0.001,
+                                    grass,
+                                )));
+                                boxes1.add(Box::new(YZRect::new(
+                                    y1 - 0.2,
+                                    y1 + 0.001,
+                                    z0 - 0.001,
+                                    z1 + 0.001,
+                                    x0 - 0.001,
+                                    grass,
+                                )));
+                                boxes1.add(Box::new(XYRect::new(
+                                    x0 - 0.001,
+                                    x1 + 0.001,
+                                    y1 - 0.2,
+                                    y1 + 0.001,
+                                    z0 - 0.001,
                                     grass,
                                 )));
                             }
                             match block.decoration {
                                 1 => {
-                                    boxes1.add(Box::new(RectBox::new(
-                                        Vec3::new(x0, y0 + 1.0, z0),
-                                        Vec3::new(x1, y1 + 5.0, z1),
-                                        tree,
-                                    )));
+                                    Self::tree(x0, y1, z0, &mut boxes1);
                                 }
                                 2 => {
                                     Self::flower(x0, y1, z0, &mut boxes1);
@@ -164,28 +335,10 @@ impl Block {
                                 _ => (),
                             }
                         }
-                        2 => {
-                            boxes1.add(Box::new(RectBox::new(
-                                Vec3::new(x0, y0, z0),
-                                Vec3::new(x1, y1, z1),
-                                sand,
-                            )));
-                        }
+                        2 => {}
                         _ => {
-                            boxes1.add(Box::new(RectBox::new(
-                                Vec3::new(x0, y0, z0),
-                                Vec3::new(x1, y1, z1),
-                                sand,
-                            )));
-                            match block.decoration {
-                                3 => {
-                                    boxes1.add(Box::new(RectBox::new(
-                                        Vec3::new(x0, y0 + 1.0, z0),
-                                        Vec3::new(x1, y1 + 1.0, z1),
-                                        coral,
-                                    )));
-                                }
-                                _ => (),
+                            if block.decoration == 3 {
+                                Self::coral(x0, y1, z0, &mut boxes1);
                             }
                         }
                     }
@@ -196,7 +349,25 @@ impl Block {
             objects: vec![BVHNode::create(boxes1, 0.0, 1.0)],
         };
 
-        let boundary = XZRect::new(
+        let log = Lambertian::new(SolidColor::new(Color::new(0.3, 0.23, 0.14)));
+        let obj = load("raytracer/src/obj/cottage_obj.obj".to_string(), log, 0.4);
+        objects.add(Box::new(Translate::new(
+            Box::new(RotateY::new(Box::new(HittableList { objects: obj }), 180.0)),
+            Vec3::new(32.0, 1.0, 56.0),
+        )));
+
+        objects.add(Box::new(RectBox::new(
+            Vec3::new(28.0, 0.0, 42.0),
+            Vec3::new(29.0, 0.6, 43.0),
+            DiffuseLight::new(SolidColor::new(Color::new(10.0, 8.0, 5.0))),
+        )));
+        objects.add(Box::new(RectBox::new(
+            Vec3::new(27.8, 0.0, 41.8),
+            Vec3::new(29.2, 0.25, 43.2),
+            ColoredDielectric::new(1.5, 0.05, Color::new(0.1, 0.1, 0.1)),
+        )));
+
+        let surface = XZRect::new(
             0.0,
             boxes_per_side as f64,
             0.0,
@@ -205,7 +376,33 @@ impl Block {
             // Dielectric::new(1.5, 0.0),
             ColoredDielectric::new(1.5, 0.0, Color::new(0.83, 0.91, 0.97)),
         );
-        objects.add(Box::new(boundary));
+        objects.add(Box::new(surface));
+        let sea = RectBox::new(
+            Vec3::new(0.0, -5.0, 0.0),
+            Vec3::new(boxes_per_side as f64, -0.1, boxes_per_side as f64),
+            Dielectric::new(1.5, 0.0),
+        );
+        objects.add(Box::new(ConstantMedium::new(
+            Box::new(sea),
+            0.02,
+            Isotropic::new(SolidColor::new(Color::new(0.83, 0.91, 0.97))),
+        )));
+        // let sky = RectBox::new(
+        //     Vec3::new(0.0, -0.1, 0.0),
+        //     Vec3::new(boxes_per_side as f64, 500.0, boxes_per_side as f64),
+        //     Dielectric::new(1.5, 0.0),
+        // );
+        // objects.add(Box::new(ConstantMedium::new(
+        //     Box::new(sky),
+        //     0.002,
+        //     Isotropic::new(SolidColor::new(Color::one())),
+        // )));
+
+        objects.add(Box::new(Sphere::new(
+            Vec3::new(-10.0, -30.0, 20.0),
+            5.0,
+            DiffuseLight::new(SolidColor::new(Color::new(10.0, 10.0, 10.0))),
+        )));
 
         objects
     }

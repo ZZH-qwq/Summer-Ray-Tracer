@@ -417,7 +417,7 @@ pub fn triangles() -> HittableList {
 pub fn obj_cat() -> HittableList {
     let white = Lambertian::new(SolidColor::new(Color::new(0.73, 0.73, 0.73)));
     let mut objects = HittableList {
-        objects: obj_file::load("raytracer/src/obj/cat.obj".to_string(), white),
+        objects: obj_file::load("raytracer/src/obj/cat.obj".to_string(), white, 1.0),
     };
 
     let ground_material = Lambertian::new(SolidColor::new(Color::new(0.8, 0.65, 0.45)));
