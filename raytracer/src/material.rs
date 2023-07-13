@@ -50,6 +50,7 @@ impl<T: Texture + Copy> Clone for Lambertian<T> {
 }
 
 // 金属
+#[derive(Copy, Clone)]
 pub struct Metal {
     pub albedo: Color,
     pub fuzz: f64,
@@ -199,5 +200,62 @@ impl<T: Texture + Copy> Clone for Isotropic<T> {
         Self {
             albedo: self.albedo,
         }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct ColoredDielectric {
+    pub ir: f64,
+    pub fuzz: f64,
+    pub color: Color,
+}
+
+impl ColoredDielectric {
+    pub fn new(ir: f64, fuzz: f64, color: Color) -> Self {
+        Self { ir, fuzz, color }
+    }
+
+    // 非全反射时 折射存在概率
+    pub fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+        // 施里克近似
+        let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+        let r0p = r0 * r0;
+        r0p + (1.0 - r0p) * (1.0 - cosine).powf(5.0)
+    }
+}
+
+impl Material for ColoredDielectric {
+    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Color, Ray)> {
+        let refraction_ratio = if hit_record.front_face {
+            1.0 / self.ir
+        } else {
+            self.ir
+        };
+        let unit_direction = Vec3::unit_vector(ray.direction);
+        let cos_theta = Vec3::dot(-unit_direction, hit_record.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_reflact = refraction_ratio * sin_theta > 1.0;
+        let mut rng = rand::thread_rng();
+        let rand_double: f64 = rng.gen();
+        if cannot_reflact || Self::reflectance(cos_theta, refraction_ratio) > rand_double {
+            // 反射
+            let reflected = Vec3::reflect(unit_direction, hit_record.normal);
+            Some((self.color, Ray::new(hit_record.point, reflected, ray.time)))
+        } else {
+            // 折射
+            let refracted = Vec3::refract(unit_direction, hit_record.normal, refraction_ratio);
+            Some((
+                self.color,
+                Ray::new(
+                    hit_record.point,
+                    refracted + Vec3::random_in_unit_sphere() * self.fuzz,
+                    ray.time,
+                ),
+            ))
+        }
+    }
+
+    fn emitted(&self, _: f64, _: f64, _: Vec3) -> Color {
+        Color::zero()
     }
 }

@@ -3,11 +3,13 @@ mod bvh_node;
 mod camera;
 mod hittable;
 mod material;
+mod mc_world;
 mod obj_file;
 mod ray;
 mod texture;
 mod vec3;
 use crate::bvh_node::BVHNode;
+use crate::mc_world::Block;
 use crate::texture::*;
 use camera::Camera;
 use console::style;
@@ -49,27 +51,23 @@ fn ray_color(
     let unit_dir = Vec3::unit_vector(ray.direction);
     let theta = unit_dir.y.acos();
     let phi = (-unit_dir.z).atan2(unit_dir.x) + std::f64::consts::PI;
-    let c = background.value(
+    background.value(
         phi / (2.0 * std::f64::consts::PI),
         theta / std::f64::consts::PI,
         ray.origin,
-    );
-    // if c.length() > 1.7 {
-    //     println!("{},{},{}", c.x, c.y, c.z);
-    // }
-    c
+    )
 }
 
 fn main() {
     // 图像
     let aspect_ratio = 3.0 / 2.0;
-    let width = 1200;
+    let width = 200;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 5000;
+    let samples_per_pixel = 1;
     let max_depth = 50;
 
     // 生成
-    let path = std::path::Path::new("output/objtest/image2.jpg");
+    let path = std::path::Path::new("output/objtest/image4.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     let quality = 100;
@@ -88,7 +86,7 @@ fn main() {
     );
 
     // 世界
-    let world_type = 1;
+    let world_type = 0;
     let lookfrom: Vec3;
     let lookat: Vec3;
     let vfov: f64;
@@ -187,16 +185,24 @@ fn main() {
             vfov = 20.0;
             aperture = 0.0;
         }
-        _ => {
+        10 => {
             world = generator::obj_cat();
             // background = SolidColor::new(Color::new(0.7, 0.8, 1.0));
-            background = Arc::new(HdrImageTexture::new(
-                "raytracer/src/texture/img/City_Night_Lights.hdr".to_string(),
-                1.0,
+            background = Arc::new(ImageTexture::new(
+                "raytracer/src/texture/img/earthmap.jpg".to_string(),
             ));
             lookfrom = Vec3::new(1000.0, 500.0, 1000.0);
             lookat = Vec3::new(0.0, 200.0, 0.0);
-            vfov = 30.0;
+            vfov = 20.0;
+            aperture = 0.0;
+        }
+        _ => {
+            world = Block::the_world();
+            background = Arc::new(SolidColor::new(Color::new(0.7, 0.8, 1.0)));
+            // background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Vec3::new(10.0, 10.0, 10.0);
+            lookat = Vec3::new(36.0, 0.0, 36.0);
+            vfov = 45.0;
             aperture = 0.0;
         }
     };

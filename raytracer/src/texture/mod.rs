@@ -71,7 +71,8 @@ impl NoiseTexture {
 
 impl Texture for NoiseTexture {
     fn value(&self, _: f64, _: f64, p: Vec3) -> Color {
-        Color::one() * 0.5 * (1.0 + (self.scale * p.z + 10.0 * self.noise.trub(p, 7)).sin())
+        // Color::one() * 0.5 * (1.0 + (self.scale * p.z + 10.0 * self.noise.trub(p, 7)).sin())
+        Color::one() * self.noise.trub(self.scale * p, 7)
     }
 }
 
@@ -108,24 +109,26 @@ impl Texture for ImageTexture {
     }
 }
 
+// HDRi图像
 pub struct HdrImageTexture {
     data: Vec<RGB>,
     width: u32,
     height: u32,
+    total: usize,
     limit: f64,
 }
 
 impl HdrImageTexture {
     pub fn new(file_name: String, limit: f64) -> Self {
-        let f = std::fs::File::open(file_name.to_string()).expect("Failed to open specified file");
+        let f = std::fs::File::open(&file_name).expect("Failed to open specified file");
         let f = BufReader::new(f);
         let image = radiant::load(f).expect("Failed to load image data");
         let data = image.data;
-        assert_eq!(image.width, 512);
         Self {
             data,
             width: image.width as u32,
             height: image.height as u32,
+            total: image.width * image.height,
             limit,
         }
     }
@@ -133,9 +136,25 @@ impl HdrImageTexture {
 
 impl Texture for HdrImageTexture {
     fn value(&self, u: f64, v: f64, _: Vec3) -> Color {
-        let i = ((u * self.width as f64) as u32).clamp(0, self.width - 1);
-        let j = ((v * self.height as f64) as u32).clamp(0, self.height - 1);
-        let rgb = &self.data[(j * self.width + i) as usize];
-        Color::new(rgb.r as f64, rgb.g as f64, rgb.b as f64) * self.limit
+        let ii = u * self.width as f64;
+        let jj = v * self.height as f64;
+        let di = ii.fract() as f32;
+        let dj = jj.fract() as f32;
+        let v00 = (1.0 - di) * (1.0 - dj);
+        let v10 = di * (1.0 - dj);
+        let v01 = (1.0 - di) * dj;
+        let v11 = di * dj;
+        let i = (ii as u32).clamp(0, self.width - 1);
+        let j = (jj as u32).clamp(0, self.height - 1);
+        let idx = (j * self.width + i) as usize;
+        let rgb00 = &self.data[idx];
+        let rgb10 = &self.data[(idx + 1).clamp(0, self.total)];
+        let rgb01 = &self.data[(idx + self.width as usize).clamp(0, self.total)];
+        let rgb11 = &self.data[(idx + self.width as usize + 1).clamp(0, self.total)];
+        Color::new(
+            (rgb00.r * v00 + rgb01.r * v01 + rgb10.r * v10 + rgb11.r * v11) as f64,
+            (rgb00.g * v00 + rgb01.g * v01 + rgb10.g * v10 + rgb11.g * v11) as f64,
+            (rgb00.b * v00 + rgb01.b * v01 + rgb10.b * v10 + rgb11.b * v11) as f64,
+        ) * self.limit
     }
 }
