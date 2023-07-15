@@ -63,7 +63,7 @@ fn main() {
     let aspect_ratio = 3.0 / 2.0;
     let width = 600;
     let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 30;
+    let samples_per_pixel = 180;
     let max_depth = 25;
 
     // 生成
@@ -204,10 +204,10 @@ fn main() {
             background = Arc::new(ImageTexture::new(
                 "raytracer/src/texture/img/twilight.jpg".to_string(),
             ));
-            lookfrom = Vec3::new(10.0, 12.0, 10.0);
+            lookfrom = Vec3::new(10.0, 10.0, 10.0);
             lookat = Vec3::new(36.0, 2.0, 36.0);
-            vfov = 45.0;
-            aperture = 0.1;
+            vfov = 40.0;
+            aperture = 0.2;
         }
     };
 
@@ -236,7 +236,7 @@ fn main() {
         let step = thread_count;
         let tot_width = width / 4;
         let tot_height = height / 4;
-        let cur_samples_per_pixel = (samples_per_pixel / 4).max(1);
+        let cur_samples_per_pixel = (samples_per_pixel / 8).max(1);
         let cur_max_depth = max_depth / 2;
         let thread_cam = Arc::clone(&mul_cam);
         let thread_world = Arc::clone(&mul_world);

@@ -57,13 +57,13 @@ impl Block {
                     let select = rng.gen::<f64>();
                     if !block.occupied
                         && select
-                            > (1.0 - ((i as f64 * 1.25).max(j as f64) - j as f64) / 500.0)
+                            > (1.0 - (((i + 10) as f64 * 1.75).max(j as f64) - j as f64) / 500.0)
                                 .max(0.995)
                     {
                         // have tree
                         block.decoration = 1;
                         block.occupied = true;
-                    } else if select > 0.9 {
+                    } else if select > 0.93 {
                         // have flower
                         block.decoration = 2;
                     }
@@ -169,12 +169,12 @@ impl Block {
         let c = (Color::random() + Color::one() * 0.5) * 0.66;
         let mat = Lambertian::new(SolidColor::new(c));
         let mut rng = rand::thread_rng();
-        let offset = rng.gen::<f64>() * 0.5;
+        let offset = rng.gen::<f64>() * 0.7;
         list.add(Box::new(XZRect::new(
             x + offset,
-            x + offset + 0.3,
+            x + offset + 0.4,
             z + offset,
-            z + offset + 0.3,
+            z + offset + 0.4,
             y + rng.gen::<f64>() / 4.0,
             mat,
         )));
@@ -188,8 +188,8 @@ impl Block {
         )));
         list.add(Box::new(XZRect::new(
             x + 1.0 - offset,
-            x + 1.0 - offset + 0.3,
-            z + 1.0 - offset - 0.3,
+            x + 1.0 - offset + 0.4,
+            z + 1.0 - offset - 0.4,
             z + 1.0 - offset,
             y + rng.gen::<f64>() / 3.0,
             mat,
@@ -268,7 +268,7 @@ impl Block {
         // let flower = Lambertian::new(SolidColor::new(Color::new(1.0, 0.0, 0.0)));
         // let coral = Lambertian::new(SolidColor::new(Color::new(0.0, 0.0, 1.0)));
 
-        let boxes_per_side = 250;
+        let boxes_per_side = 200;
         let map = Block::create(boxes_per_side, -6.0);
         // Self::flower(8.0, 14.0, 8.0, &mut boxes1);
         // boxes1.add(Box::new(RectBox::new(
@@ -279,7 +279,7 @@ impl Block {
 
         for (i, it) in map.into_iter().enumerate() {
             for (j, block) in it.into_iter().enumerate() {
-                if (0.3..3.5).contains(&(j as f32 / i as f32)) && (j as i32 + i as i32) > 40 {
+                if (0.33..3.3).contains(&(j as f32 / i as f32)) && (j as i32 + i as i32) > 40 {
                     let w = 1.0;
                     let x0 = i as f64 * w;
                     let z0 = j as f64 * w;
@@ -349,7 +349,8 @@ impl Block {
             objects: vec![BVHNode::create(boxes1, 0.0, 1.0)],
         };
 
-        let log = Lambertian::new(SolidColor::new(Color::new(0.3, 0.23, 0.14)));
+        // let log = Lambertian::new(SolidColor::new(Color::new(0.3, 0.23, 0.14)));
+        let log = DiffuseLight::new(SolidColor::new(Color::new(3.0, 1.5, 1.0)));
         let obj = load("raytracer/src/obj/cottage_obj.obj".to_string(), log, 0.4);
         objects.add(Box::new(Translate::new(
             Box::new(RotateY::new(Box::new(HittableList { objects: obj }), 180.0)),
@@ -384,7 +385,7 @@ impl Block {
         );
         objects.add(Box::new(ConstantMedium::new(
             Box::new(sea),
-            0.02,
+            0.1,
             Isotropic::new(SolidColor::new(Color::new(0.83, 0.91, 0.97))),
         )));
         // let sky = RectBox::new(
